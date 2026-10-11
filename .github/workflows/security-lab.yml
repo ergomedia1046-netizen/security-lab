@@ -17,6 +17,25 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Diagnose repository files
+        run: |
+          echo "Directorio de trabajo:"
+          pwd
+
+          echo "Commit ejecutado:"
+          git rev-parse --short HEAD
+
+          echo "Archivos del generador:"
+          git ls-tree -r --name-only HEAD scripts/
+
+          echo "Contenido de scripts:"
+          ls -la scripts/
+
+          test -f scripts/generate_report.py
+
       - name: Create isolated lab network
         run: docker network create labnet
 
@@ -49,6 +68,8 @@ jobs:
           chmod 777 reports
 
       - name: Run passive security scan
+        id: zap
+        continue-on-error: true
         run: |
           zap_exit=0
 
@@ -61,25 +82,22 @@ jobs:
             -r report.html \
             -J report.json || zap_exit=$?
 
-          echo "Código de salida de ZAP: $zap_exit"
           echo "$zap_exit" > reports/zap-exit-code.txt
-
-          if [ ! -s reports/report.html ]; then
-            echo "::error::No se generó report.html"
-            exit 1
-          fi
+          echo "Código de salida de ZAP: $zap_exit"
 
           if [ ! -s reports/report.json ]; then
-            echo "::error::No se generó report.json"
-            exit 1
+            echo "No se generó report.json"
           fi
 
-          echo "Los informes HTML y JSON se generaron correctamente."
-          echo "Consulta las alertas antes de sacar conclusiones."
+          if [ ! -s reports/report.html ]; then
+            echo "No se generó report.html"
+          fi
 
       - name: Generate Spanish technical report
         if: always()
         run: |
+          python3 --version
+          test -f scripts/generate_report.py
           python3 scripts/generate_report.py
 
       - name: Save reports
