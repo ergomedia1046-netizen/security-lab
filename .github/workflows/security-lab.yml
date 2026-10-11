@@ -4,15 +4,17 @@ name: Security Lab
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: read
 
 jobs:
   scan:
+    name: Scan OWASP Juice Shop
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Create isolated lab network
@@ -32,18 +34,24 @@ jobs:
             --entrypoint sh \
             curlimages/curl:latest \
             -c 'for i in $(seq 1 30); do
-            if curl -fsS http://juice-shop:3000/ >/dev/null; then
-              exit 0
-            fi
-            sleep 2
+              if curl -fsS http://juice-shop:3000/ >/dev/null; then
+                echo "Juice Shop está listo."
+                exit 0
+              fi
+              sleep 2
             done
+            echo "Juice Shop no respondió a tiempo."
             exit 1'
 
-
-      - name: Run passive security scan
+      - name: Prepare report directory
         run: |
           mkdir -p reports
           chmod 777 reports
+
+      - name: Run passive security scan
+        run: |
+          zap_exit=0
+
           docker run --rm \
             --network labnet \
             -v "$PWD/reports:/zap/wrk/:rw" \
@@ -51,7 +59,23 @@ jobs:
             zap-baseline.py \
             -t http://juice-shop:3000 \
             -r report.html \
-            -J report.json
+            -J report.json || zap_exit=$?
+
+          echo "Código de salida de ZAP: $zap_exit"
+          echo "$zap_exit" > reports/zap-exit-code.txt
+
+          if [ ! -s reports/report.html ]; then
+            echo "::error::No se generó report.html"
+            exit 1
+          fi
+
+          if [ ! -s reports/report.json ]; then
+            echo "::error::No se generó report.json"
+            exit 1
+          fi
+
+          echo "Los informes HTML y JSON se generaron correctamente."
+          echo "Consulta las alertas antes de sacar conclusiones."
 
       - name: Save reports
         if: always()
@@ -62,7 +86,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Clean up
+      - name: Clean up lab
         if: always()
         run: |
           docker rm -f juice-shop || true
