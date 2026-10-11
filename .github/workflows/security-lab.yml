@@ -39,9 +39,11 @@ jobs:
             done
             exit 1'
 
+
       - name: Run passive security scan
         run: |
           mkdir -p reports
+          chmod 777 reports
           docker run --rm \
             --network labnet \
             -v "$PWD/reports:/zap/wrk/:rw" \
