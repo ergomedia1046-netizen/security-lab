@@ -10,6 +10,7 @@ on:
 permissions:
   contents: write
   actions: read
+  security-events: read
 
 jobs:
   scan:
@@ -98,6 +99,41 @@ jobs:
             echo "Informe anterior preparado para comparación."
           else
             echo "Primera ejecución o informe anterior no disponible."
+          fi
+
+      - name: Retrieve CodeQL alerts
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p reports
+
+          echo "Consultando alertas de CodeQL..."
+
+          if gh api \
+            --paginate \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "repos/${GITHUB_REPOSITORY}/code-scanning/alerts?per_page=100" \
+            > reports/codeql-alerts.json; then
+
+            echo "Resultados de CodeQL guardados."
+
+            python3 -c '
+          import json
+          from pathlib import Path
+
+          path = Path("reports/codeql-alerts.json")
+          data = json.loads(path.read_text())
+
+          if isinstance(data, list):
+              print(f"Alertas recibidas: {len(data)}")
+          else:
+              print("La respuesta no tiene el formato de lista esperado.")
+          '
+          else
+            echo "No se pudieron recuperar las alertas de CodeQL."
+            rm -f reports/codeql-alerts.json
           fi
 
       - name: Passive scan with OWASP ZAP
