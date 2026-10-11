@@ -16,33 +16,49 @@ RISK_LABELS = {
     "-1": "Sin clasificar",
 }
 
-def clean(value):
-    """Convierte valores a texto seguro para el informe Markdown."""
+
+def text(value, default="No disponible"):
     if value is None:
-        return "No disponible"
-    return str(value).replace("\r", " ").strip() or "No disponible"
+        return default
+    result = str(value).strip()
+    return result if result else default
+
 
 def main():
     REPORTS.mkdir(parents=True, exist_ok=True)
     generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
-    if not JSON_FILE.exists():
-        OUTPUT_FILE.write_text(
-            "# Informe de seguridad\n\n"
-            "No se encontró `report.json`. "
-            "Revisa los registros de ejecución de ZAP.\n",
-            encoding="utf-8",
-        )
+    lines = [
+        "# Informe técnico de seguridad",
+        "",
+        f"- **Fecha de generación:** {generated}",
+        "- **Herramienta:** OWASP ZAP Baseline",
+        "- **Objetivo:** OWASP Juice Shop en laboratorio aislado",
+        "- **Coste de generación:** US$0; no se utiliza una API de IA",
+        "",
+    ]
+
+    if not JSON_FILE.is_file():
+        lines.extend([
+            "## Error de entrada",
+            "",
+            "No se encontró `reports/report.json`.",
+            "Revisa los registros del escaneo ZAP.",
+        ])
+        OUTPUT_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        print(f"Informe generado sin datos de entrada: {OUTPUT_FILE}")
         return
 
     try:
         data = json.loads(JSON_FILE.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError) as exc:
-        OUTPUT_FILE.write_text(
-            "# Informe de seguridad\n\n"
-            f"No se pudo leer el JSON: {clean(exc)}\n",
-            encoding="utf-8",
-        )
+    except (OSError, json.JSONDecodeError) as exc:
+        lines.extend([
+            "## Error de lectura",
+            "",
+            f"No se pudo leer el JSON: {text(exc)}",
+        ])
+        OUTPUT_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        print("No se pudo interpretar report.json.")
         return
 
     sites = data.get("site", [])
@@ -55,25 +71,31 @@ def main():
     for site in sites:
         if not isinstance(site, dict):
             continue
-        for alert in site.get("alerts", []):
+
+        site_name = text(site.get("@name"), "Sitio no identificado")
+        site_alerts = site.get("alerts", [])
+
+        if not isinstance(site_alerts, list):
+            continue
+
+        for alert in site_alerts:
             if isinstance(alert, dict):
-                alert["_site"] = clean(site.get("@name", "No disponible"))
-                alerts.append(alert)
+                item = dict(alert)
+                item["_site"] = site_name
+                alerts.append(item)
 
-    counts = Counter()
-    for alert in alerts:
-        risk = str(alert.get("riskcode", "-1"))
-        counts[RISK_LABELS.get(risk, "Sin clasificar")] += 1
+    def risk_number(alert):
+        try:
+            return int(alert.get("riskcode", -1))
+        except (TypeError, ValueError):
+            return -1
 
-    lines = [
-        "# Informe técnico de seguridad",
-        "",
-        f"- **Generado:** {generated}",
-        "- **Herramienta:** OWASP ZAP",
-        "- **Entorno:** laboratorio autorizado",
-        "- **Alcance:** resultados del análisis automatizado; "
-        "no constituye una auditoría exhaustiva.",
-        "",
+    counts = Counter(
+        RISK_LABELS.get(str(risk_number(alert)), "Sin clasificar")
+        for alert in alerts
+    )
+
+    lines.extend([
         "## 1. Resumen ejecutivo",
         "",
         f"- **Alertas registradas:** {len(alerts)}",
@@ -82,90 +104,109 @@ def main():
         f"- **Bajas:** {counts['Bajo']}",
         f"- **Informativas:** {counts['Informativo']}",
         "",
-        "Las alertas automáticas requieren validación manual. "
-        "La cantidad de alertas no equivale necesariamente a la "
-        "cantidad de vulnerabilidades confirmadas.",
+        "Las alertas son resultados automáticos y no necesariamente "
+        "vulnerabilidades confirmadas. Es necesaria una revisión manual.",
         "",
         "## 2. Hallazgos",
         "",
-    ]
+    ])
 
     if not alerts:
-        lines.append(
-            "No se encontraron alertas en el JSON. "
-            "Confirma que el análisis se completó correctamente."
-        )
-
-    for index, alert in enumerate(
-        sorted(
-            alerts,
-            key=lambda a: int(a.get("riskcode", -1))
-            if str(a.get("riskcode", "-1")).lstrip("-").isdigit()
-            else -1,
-            reverse=True,
-        ),
-        start=1,
-    ):
-        risk = str(alert.get("riskcode", "-1"))
-        severity = RISK_LABELS.get(risk, "Sin clasificar")
-        name = clean(alert.get("name"))
         lines.extend([
-            f"### {index}. {name}",
+            "No se encontraron alertas en el JSON.",
+            "Comprueba que el escaneo terminó correctamente antes "
+            "de interpretar este resultado como ausencia de riesgos.",
             "",
-            f"- **Severidad reportada:** {severity}",
-            f"- **Sitio:** {alert['_site']}",
-            f"- **Confianza:** {clean(alert.get('confidence'))}",
+        ])
+
+    alerts.sort(key=risk_number, reverse=True)
+
+    for number, alert in enumerate(alerts, start=1):
+        risk = str(risk_number(alert))
+        severity = RISK_LABELS.get(risk, "Sin clasificar")
+
+        lines.extend([
+            f"### {number}. {text(alert.get('name'))}",
+            "",
+            f"- **Severidad:** {severity}",
+            f"- **Sitio:** {text(alert.get('_site'))}",
+            f"- **Confianza reportada:** {text(alert.get('confidence'))}",
             "",
             "**Descripción**",
             "",
-            clean(alert.get("desc", "Sin descripción")),
+            text(alert.get("desc"), "ZAP no proporcionó una descripción."),
             "",
-            "**Recomendación de ZAP**",
+            "**Recomendación**",
             "",
-            clean(alert.get("solution", "Revisar la configuración y validar el hallazgo")),
+            text(
+                alert.get("solution"),
+                "Revisar el hallazgo y validar la configuración afectada."
+            ),
             "",
         ])
 
         instances = alert.get("instances", [])
         if isinstance(instances, list) and instances:
-            lines.extend(["**Evidencias y ubicaciones (máximo 5)**", ""])
+            lines.extend(["**Ubicaciones y evidencias**", ""])
+
             for instance in instances[:5]:
                 if not isinstance(instance, dict):
                     continue
+
+                uri = text(instance.get("uri"))
+                method = text(instance.get("method"))
+                param = text(instance.get("param"))
+
                 lines.append(
-                    f"- URL: `{clean(instance.get('uri'))}`; "
-                    f"método: `{clean(instance.get('method'))}`; "
-                    f"parámetro: `{clean(instance.get('param'))}`"
+                    f"- URL: `{uri}`; método: `{method}`; parámetro: `{param}`"
                 )
+
                 evidence = instance.get("evidence")
                 if evidence:
-                    lines.append(f"  - Evidencia: `{clean(evidence)[:500]}`")
+                    lines.append(f"  - Evidencia: `{text(evidence)[:300]}`")
+
+            if len(instances) > 5:
+                lines.append(
+                    f"- Se omitieron {len(instances) - 5} ubicaciones adicionales."
+                )
+
             lines.append("")
 
         reference = alert.get("reference")
         if reference:
-            lines.extend(["**Referencias**", "", clean(reference), ""])
+            lines.extend([
+                "**Referencias**",
+                "",
+                text(reference),
+                "",
+            ])
 
     lines.extend([
         "## 3. Limitaciones",
         "",
-        "- ZAP Baseline se centra principalmente en comprobaciones pasivas.",
-        "- Los resultados pueden incluir falsos positivos.",
-        "- No se ha confirmado manualmente cada hallazgo.",
-        "- Este informe no demuestra que el sistema sea seguro o inseguro "
-        "en todos sus componentes.",
+        "- El escaneo Baseline se centra principalmente en comprobaciones pasivas.",
+        "- Puede haber falsos positivos o problemas no detectados.",
+        "- Los resultados no sustituyen una auditoría de seguridad completa.",
+        "- No se realizaron pruebas contra sistemas de terceros.",
         "",
         "## 4. Próximos pasos",
         "",
-        "1. Priorizar los hallazgos de severidad alta y media.",
-        "2. Revisar evidencias, configuración y recomendaciones.",
-        "3. Validar los hallazgos manualmente dentro del laboratorio.",
-        "4. Repetir el análisis después de aplicar correcciones.",
+        "1. Revisar primero los hallazgos de severidad alta y media.",
+        "2. Validar manualmente cada hallazgo dentro del laboratorio.",
+        "3. Corregir los problemas confirmados.",
+        "4. Repetir el escaneo y comparar los resultados.",
+        "",
+        "---",
+        "",
+        "Informe generado automáticamente mediante Python. "
+        "Este generador no utiliza un modelo de IA.",
         "",
     ])
 
     OUTPUT_FILE.write_text("\n".join(lines), encoding="utf-8")
-    print(f"Informe creado: {OUTPUT_FILE}")
+    print(f"Informe generado correctamente: {OUTPUT_FILE}")
+    print(f"Total de alertas procesadas: {len(alerts)}")
+
 
 if __name__ == "__main__":
     main()
