@@ -77,6 +77,11 @@ jobs:
           echo "Los informes HTML y JSON se generaron correctamente."
           echo "Consulta las alertas antes de sacar conclusiones."
 
+      - name: Generate Spanish technical report
+        if: always()
+        run: |
+          python3 scripts/generate_report.py
+
       - name: Save reports
         if: always()
         uses: actions/upload-artifact@v4
