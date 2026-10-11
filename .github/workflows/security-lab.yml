@@ -8,7 +8,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
   actions: read
 
 jobs:
@@ -25,6 +25,7 @@ jobs:
         run: |
           test -f scripts/generate_report.py
           test -f scripts/compare_reports.py
+          test -f scripts/generate_dashboard.py
           echo "Scripts encontrados."
 
       - name: Download previous report
@@ -43,7 +44,6 @@ jobs:
 
           if [ -n "$RUN_ID" ]; then
             echo "Ejecución anterior: $RUN_ID"
-
             gh run download "$RUN_ID" \
               --name security-lab-reports \
               --dir previous-artifact || true
@@ -114,11 +114,24 @@ jobs:
         if: always()
         run: python3 scripts/compare_reports.py
 
-      - name: Show comparison
+      - name: Generate dashboard
         if: always()
         run: |
-          if [ -f reports/comparacion.md ]; then
-            cat reports/comparacion.md
+          python3 scripts/generate_dashboard.py
+
+      - name: Save dashboard history
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add docs/index.html docs/history.json
+
+          if git diff --cached --quiet; then
+            echo "No hay cambios en el dashboard."
+          else
+            git commit -m "Update security dashboard"
+            git push
           fi
 
       - name: Upload reports
