@@ -1,4 +1,4 @@
-
+```yaml
 name: Security Lab
 
 on:
@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   scan:
@@ -17,9 +18,11 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      # 1. Descargar el repositorio
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      # 2. Comprobar que existen los scripts
       - name: Diagnose repository files
         run: |
           echo "Directorio de trabajo:"
@@ -28,17 +31,50 @@ jobs:
           echo "Commit ejecutado:"
           git rev-parse --short HEAD
 
-          echo "Archivos del generador:"
+          echo "Archivos de scripts:"
           git ls-tree -r --name-only HEAD scripts/
 
-          echo "Contenido de scripts:"
-          ls -la scripts/
-
           test -f scripts/generate_report.py
+          test -f scripts/compare_reports.py
 
+      # 3. Buscar el último informe exitoso
+      - name: Find and download previous report
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p previous-artifact
+
+          PREVIOUS_RUN_ID=$(gh run list \
+            --workflow security-lab.yml \
+            --branch main \
+            --status success \
+            --limit 10 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty')
+
+          if [ -z "$PREVIOUS_RUN_ID" ]; then
+            echo "No hay ejecuciones exitosas anteriores."
+            exit 0
+          fi
+
+          echo "Ejecución anterior encontrada: $PREVIOUS_RUN_ID"
+
+          if gh run download "$PREVIOUS_RUN_ID" \
+            --name security-lab-reports \
+            --dir previous-artifact; then
+            echo "Informe anterior descargado."
+            ls -lah previous-artifact/
+          else
+            echo "No se pudo descargar el informe anterior."
+            echo "El análisis continuará sin una línea base."
+          fi
+
+      # 4. Crear una red aislada para el laboratorio
       - name: Create isolated lab network
-        run: docker network create labnet
+        run: |
+          docker network create labnet
 
+      # 5. Iniciar OWASP Juice Shop
       - name: Start training application
         run: |
           docker run -d \
@@ -46,6 +82,7 @@ jobs:
             --network labnet \
             bkimminich/juice-shop
 
+      # 6. Esperar hasta que la aplicación responda
       - name: Wait for application
         run: |
           docker run --rm \
@@ -62,11 +99,24 @@ jobs:
             echo "Juice Shop no respondió a tiempo."
             exit 1'
 
+      # 7. Preparar el directorio de informes
       - name: Prepare report directory
         run: |
           mkdir -p reports
           chmod 777 reports
 
+      # 8. Preparar la línea base del análisis anterior
+      - name: Prepare previous baseline
+        run: |
+          if [ -s previous-artifact/report.json ]; then
+            cp previous-artifact/report.json reports/baseline.json
+            echo "Línea base anterior preparada."
+          else
+            echo "No hay informe anterior disponible."
+            echo "Esta ejecución podría ser la primera comparación."
+          fi
+
+      # 9. Ejecutar el análisis pasivo con OWASP ZAP
       - name: Run passive security scan
         id: zap
         continue-on-error: true
@@ -83,28 +133,58 @@ jobs:
             -J report.json || zap_exit=$?
 
           echo "$zap_exit" > reports/zap-exit-code.txt
+
           echo "Código de salida de ZAP: $zap_exit"
 
-          if [ ! -s reports/report.json ]; then
-            echo "No se generó report.json"
+          if [ -s reports/report.json ]; then
+            echo "Informe JSON generado."
+          else
+            echo "ADVERTENCIA: no se generó report.json."
           fi
 
-          if [ ! -s reports/report.html ]; then
-            echo "No se generó report.html"
+          if [ -s reports/report.html ]; then
+            echo "Informe HTML generado."
+          else
+            echo "ADVERTENCIA: no se generó report.html."
           fi
 
+      # 10. Generar el informe técnico en español
       - name: Generate Spanish technical report
         if: always()
         run: |
           python3 --version
-          test -f scripts/generate_report.py
-          python3 scripts/generate_report.py
-      
+
+          if [ -f scripts/generate_report.py ]; then
+            python3 scripts/generate_report.py
+          else
+            echo "No se encontró scripts/generate_report.py"
+            exit 1
+          fi
+
+      # 11. Comparar el análisis actual con el anterior
       - name: Compare security results
         if: always()
         run: |
-          python3 scripts/compare_reports.py
+          if [ -f scripts/compare_reports.py ]; then
+            python3 scripts/compare_reports.py
+          else
+            echo "No se encontró scripts/compare_reports.py"
+            exit 1
+          fi
 
+      # 12. Mostrar los archivos generados en los registros
+      - name: Show generated reports
+        if: always()
+        run: |
+          echo "Archivos disponibles:"
+          find reports -maxdepth 2 -type f -print
+
+          if [ -f reports/comparacion.md ]; then
+            echo "===== COMPARACIÓN ====="
+            cat reports/comparacion.md
+          fi
+
+      # 13. Guardar todos los informes como artefacto
       - name: Save reports
         if: always()
         uses: actions/upload-artifact@v6
@@ -114,8 +194,10 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      # 14. Limpiar los contenedores y la red
       - name: Clean up lab
         if: always()
         run: |
           docker rm -f juice-shop || true
           docker network rm labnet || true
+```
