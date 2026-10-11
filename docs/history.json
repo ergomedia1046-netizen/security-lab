@@ -1757,12 +1757,12 @@
     ]
   },
   {
-    "run_id": "38169196605",
-    "run_number": "41",
-    "timestamp": "2026-10-11T19:50:57+00:00",
-    "commit": "ed6629886b75",
+    "run_id": "38169217025",
+    "run_number": "42",
+    "timestamp": "2026-10-11T19:59:48+00:00",
+    "commit": "3e883bdca29a",
     "total_alerts": 15,
-    "total_instances": 90,
+    "total_instances": 91,
     "counts": {
       "3": 0,
       "2": 5,
@@ -1896,11 +1896,11 @@
         "riskcode": "0",
         "risk": "Informativo",
         "confidence": "2",
-        "instances": 1,
+        "instances": 2,
         "description": "<p>The response contents are not storable by caching components such as proxy servers. If the response does not contain sensitive, personal or user-specific information, it may benefit from being stored and cached, to improve performance.</p>",
         "solution": "<p>The content may be marked as storable by ensuring that the following conditions are satisfied:</p><p>The request method must be understood by the cache and defined as being cacheable (\"GET\", \"HEAD\", and \"POST\" are currently defined as cacheable)</p><p>The response status code must be understood by the cache (one of the 1XX, 2XX, 3XX, 4XX, or 5XX response classes are generally understood)</p><p>The \"no-store\" cache directive must not appear in the request or response header fields</p><p>For caching by \"shared\" caches such as \"proxy\" caches, the \"private\" response directive must not appear in the response</p><p>For caching by \"shared\" caches such as \"proxy\" caches, the \"Authorization\" header field must not appear in the request, unless the response explicitly allows it (using one of the \"must-revalidate\", \"public\", or \"s-maxage\" Cache-Control response directives)</p><p>In addition to the conditions above, at least one of the following conditions must also be satisfied by the response:</p><p>It must contain an \"Expires\" header field</p><p>It must contain a \"max-age\" response directive</p><p>For \"shared\" caches such as \"proxy\" caches, it must contain a \"s-maxage\" response directive</p><p>It must contain a \"Cache Control Extension\" that allows it to be cached</p><p>It must have a status code that is defined as cacheable by default (200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501).</p>",
         "reference": "<p>https://datatracker.ietf.org/doc/html/rfc7234</p><p>https://datatracker.ietf.org/doc/html/rfc7231</p><p>https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html</p>",
-        "url": "http://juice-shop:3000/ftp/encrypt.pyc"
+        "url": "http://juice-shop:3000/ftp/eastere.gg"
       },
       {
         "name": "Storable and Cacheable Content",

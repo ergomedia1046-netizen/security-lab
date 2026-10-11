@@ -19,63 +19,66 @@ a{color:#9db7ff}
 <body><main>
 <p><a href="index.html">← Volver al dashboard</a></p>
 <h1>Análisis asistido por IA</h1>
-<p class="meta">Modelo: gemini-3.5-flash-lite · Generado: 2026-10-11T19:51:03+00:00</p>
+<p class="meta">Modelo: gemini-3.5-flash-lite · Generado: 2026-10-11T19:59:55+00:00</p>
 <section><pre>A continuación, se presenta el análisis defensivo basado exclusivamente en los hallazgos reportados por OWASP ZAP para el laboratorio OWASP Juice Shop.
 
 ---
 
 ### 1. Resumen ejecutivo
-El análisis automatizado mediante OWASP ZAP sobre el entorno de OWASP Juice Shop ha identificado un total de 15 tipos de alertas, abarcando niveles de riesgo Medio, Bajo e Informativo. No se han reportado alertas de riesgo Alto en este conjunto de datos. 
+El análisis automatizado realizado mediante OWASP ZAP sobre el laboratorio OWASP Juice Shop ha identificado un total de 15 tipos de alertas, clasificadas principalmente en niveles de riesgo **Medio**, **Bajo** e **Informativo**. No se han registrado alertas de riesgo Alto en este conjunto de datos. 
 
-Entre los hallazgos más relevantes se encuentran problemas de configuración en los mecanismos de control de acceso y seguridad perimetral (como *Backup File Disclosure*, *Bypassing 403*, *CORS Misconfiguration* y la ausencia de políticas de seguridad estrictas como *Content Security Policy*). Estos hallazgos indican áreas de mejora en la gestión de la configuración y el endurecimiento de cabeceras HTTP. Es importante señalar que las alertas generadas por herramientas automatizadas representan indicios y deben ser validadas manualmente para confirmar su explotabilidad y descartar posibles falsos positivos.
+Entre los hallazgos de mayor peso destacan problemas de configuración relacionados con CORS (Cross-Origin Resource Sharing), la exposición potencial de archivos de respaldo (*Backup File Disclosure*), la evasión de controles de acceso (*Bypassing 403*) y la ausencia de políticas de seguridad críticas en las cabeceras HTTP, como la Política de Seguridad de Contenidos (*Content Security Policy*). 
+
+Es importante señalar que los resultados actuales reflejan indicios detectados por herramientas automatizadas y **no confirman por sí mismos la explotabilidad** de las vulnerabilidades sin una validación manual previa. No obstante, los hallazgos señalan áreas críticas de mejora en la configuración del servidor web y en el endurecimiento (*hardening*) de la aplicación.
 
 ---
 
 ### 2. Hallazgos prioritarios y por qué importan
 
-*   **Backup File Disclosure (Riesgo: Medio, 31 instancias):**
-    *   *Por qué importa:* Indica que el servidor web podría estar exponiendo copias de seguridad de archivos. Esto puede permitir que usuarios no autorizados descarguen código fuente, configuraciones sensibles o información interna que facilite ataques posteriores.
-*   **Bypassing 403 (Riesgo: Medio, 6 instancias):**
-    *   *Por qué importa:* Señala que el escáner logró acceder (código de estado 200) a endpoints que inicialmente devolvían restricciones de acceso (403). Esto sugiere debilidades en la normalización de rutas o en la lógica de control de acceso del servidor web/proxy inverso.
-*   **CORS Misconfiguration / Cross-Domain Misconfiguration (Riesgo: Medio, 5 instancias):**
-    *   *Por qué importa:* Una configuración incorrecta de Intercambio de Recursos de Origen Cruzado (CORS) puede permitir que sitios web maliciosos lean datos sensibles de los usuarios mediante peticiones AJAX autenticadas o accedan a contenido protegido.
-*   **Content Security Policy (CSP) Header Not Set (Riesgo: Medio, 5 instancias):**
-    *   *Por qué importa:* La ausencia de la cabecera CSP debilita la defensa en profundidad de la aplicación, incrementando el riesgo de ataques de Inyección de Dependencias y Cross-Site Scripting (XSS), ya que el navegador no tiene directrices sobre qué recursos externos puede cargar o ejecutar.
-
-*(Nota: Los hallazgos de riesgo Bajo e Informativo, tales como cabeceras faltantes o desusadas como `Cross-Origin-Opener-Policy`, `Permissions-Policy` o exposiciones de marcas de tiempo, tienen un impacto menor, pero su corrección ayuda a cumplir con las mejores prácticas de endurecimiento web).*
+*   **CORS Misconfiguration / Cross-Domain Misconfiguration (Riesgo: Medio)**
+    *   *Por qué importa:* Una mala configuración en las políticas de origen cruzado permite que sitios web de terceros realicen peticiones AJAX al servidor vulnerable. Si se combina con credenciales o si expone contenido no autenticado, podría facilitar el robo de datos sensibles o el acceso no autorizado a información interna.
+*   **Backup File Disclosure (Riesgo: Medio)**
+    *   *Por qué importa:* La presencia de archivos de respaldo en el servidor web puede exponer código fuente, credenciales hardcodeadas, configuraciones antiguas o lógica interna de la aplicación que facilite ataques posteriores.
+*   **Bypassing 403 (Riesgo: Medio)**
+    *   *Por qué importa:* Indica que ciertas peticiones lograron alterar la respuesta esperada del servidor (obteniendo un código de estado 200 en lugar de un acceso denegado). Esto sugiere posibles fallas en la normalización de rutas o en la lógica de control de acceso perimetral o del servidor web.
+*   **Content Security Policy (CSP) Header Not Set (Riesgo: Medio)**
+    *   *Por qué importa:* La ausencia de CSP deja a la aplicación sin una capa defensiva clave frente a ataques de Cross-Site Scripting (XSS) y de inyección de datos, facilitando que el navegador ejecute scripts maliciosos provenientes de fuentes no confiables.
+*   **Cabeceras de seguridad faltantes o desactualizadas (Riesgo: Bajo e Informativo)**
+    *   *Por qué importa:* La ausencia de cabeceras como *Cross-Origin-Embedder-Policy*, *Cross-Origin-Opener-Policy*, o el uso de cabeceras obsoletas como *Feature-Policy* (en lugar de *Permissions-Policy*), reducen el aislamiento del contexto de navegación y exponen a la aplicación a fugas de datos entre orígenes o comportamientos impredecibles del navegador.
 
 ---
 
 ### 3. Recomendaciones de corrección concretas y ordenadas por prioridad
 
-1.  **Prioridad Alta (Mitigación de exposición de datos y control de acceso):**
-    *   **Backup File Disclosure:** Revisar el directorio raíz y las rutas del servidor web para asegurar que no existan archivos de respaldo, temporales u ocultos accesibles públicamente. Deshabilitar la edición de archivos en vivo (*in-situ*) en el servidor de producción.
-    *   **Bypassing 403:** Auditar las reglas de enrutamiento y las políticas de control de acceso. Asegurarse de que el servidor web o el proxy inverso apliquen validaciones estrictas y normalización de rutas coherentes para evitar omisiones de restricciones.
-2.  **Prioridad Media (Endurecimiento de políticas del navegador y CORS):**
-    *   **CORS Misconfiguration:** Restringir la cabecera `Access-Control-Allow-Origin` únicamente a los dominios de confianza estrictamente necesarios. Evitar el uso de comodines (`*`) o configuraciones que permitan orígenes nulos si el recurso maneja información sensible o sesiones de usuario.
-    *   **Content Security Policy (CSP):** Implementar la cabecera `Content-Security-Policy` con una política robusta que defina explícitamente los orígenes permitidos para scripts, hojas de estilo, imágenes y otros recursos.
-3.  **Prioridad Baja (Buenas prácticas de cabeceras HTTP):**
-    *   Configurar las cabeceras de aislamiento de origen faltantes (`Cross-Origin-Embedder-Policy` y `Cross-Origin-Opener-Policy`).
-    *   Reemplazar la cabecera obsoleta `Feature-Policy` por la cabecera estándar actual `Permissions-Policy`.
+1.  **Prioridad 1: Corregir políticas CORS y restricciones de origen**
+    *   Configurar la cabecera `Access-Control-Allow-Origin` de forma restrictiva, especificando únicamente los dominios de confianza necesarios en lugar de permitir comodines o respuestas genéricas inseguras.
+    *   Asegurar que los recursos sensibles no compartan contextos permisivos de origen cruzado.
+2.  **Prioridad 2: Eliminar archivos de respaldo y asegurar el despliegue**
+    *   Remover cualquier archivo temporal, oculto o de respaldo (*backup*) del servidor web de producción.
+    *   Evitar la edición directa de archivos en el servidor (*in-situ*) para prevenir la generación automática de ficheros residuales.
+3.  **Prioridad 3: Implementar Content Security Policy (CSP)**
+    *   Configurar el servidor web o la aplicación para que devuelva la cabecera `Content-Security-Policy`, declarando explícitamente las fuentes aprobadas para la carga de scripts, hojas de estilo, imágenes y otros recursos.
+4.  **Prioridad 4: Revisar la lógica de control de acceso (403 Bypasses)**
+    *   Auditar las reglas de enrutamiento y los mecanismos de control de acceso para asegurar que los recursos prohibidos no sean accesibles mediante técnicas de manipulación de peticiones o normalización de rutas.
+5.  **Prioridad 5: Endurecer cabeceras HTTP adicionales**
+    *   Implementar las cabeceras `Cross-Origin-Embedder-Policy` (con valor `require-corp`), `Cross-Origin-Opener-Policy` (con valor `same-origin`) y actualizar `Feature-Policy` a su estándar moderno `Permissions-Policy`.
 
 ---
 
 ### 4. Qué debería comprobarse manualmente para validar cada hallazgo
 
-*   **Para Backup File Disclosure:** Verificar mediante navegación manual o inspección del árbol de directorios si las 31 instancias reportadas corresponden realmente a archivos sensibles expuestos (como códigos fuente o respaldos) o si son archivos estáticos inofensivos.
-*   **Para Bypassing 403:** Reproducir la petición HTTP enviada por ZAP utilizando herramientas como cURL o un interceptor proxy (ej. OWASP ZAP/Burp Suite) para comprobar si el endpoint efectivamente otorga acceso a información o funcionalidad restringida sin la autenticación o privilegios adecuados.
-*   **Para CORS Misconfiguration:** Enviar peticiones HTTP cruzadas modificando la cabecera `Origin` desde un dominio externo controlado para comprobar si el servidor responde con `Access-Control-Allow-Origin` permisivo y si expone datos sensibles.
-*   **Para la ausencia de CSP y cabeceras relacionadas:** Inspeccionar las respuestas HTTP (p. ej., mediante las Herramientas de Desarrollo del navegador) para confirmar la ausencia real de las cabeceras `Content-Security-Policy`, `Permissions-Policy`, etc., en las páginas principales.
+*   **Para CORS / Cross-Domain Misconfiguration:** Enviar solicitudes HTTP manuales (por ejemplo, con cURL o Postman) incluyendo una cabecera `Origin: http://example.com` (un dominio malicioso o no confiable) y verificar si el servidor responde reflejando dicho origen en `Access-Control-Allow-Origin` junto con `Access-Control-Allow-Credentials: true`.
+*   **Para Backup File Disclosure:** Intentar acceder directamente a las rutas o extensiones reportadas por ZAP (como archivos con sufijos `.bak`, `~`, `.old`) mediante el navegador o herramientas de inspección para comprobar si el contenido del archivo efectivamente se descarga o se expone.
+*   **Para Bypassing 403:** Reproducir la petición marcada como instancia con el payload enviado por ZAP para verificar si el código de estado 200 devuelto realmente expone contenido protegido o si se trata de un falso positivo por redirección o contenido genérico de error.
+*   **Para CSP y Cabeceras Faltantes:** Inspeccionar la pestaña de Red (*Network*) en las Herramientas de Desarrollo del navegador durante la carga de la aplicación para confirmar la ausencia real de las cabeceras `Content-Security-Policy`, `Permissions-Policy`, `COOP` y `COEP`.
+*   **Para Funciones JS Peligrosas / Timestamp:** Revisar el código fuente del cliente para identificar el contexto exacto de uso de las funciones evaluadas y determinar si manejan datos controlados por el usuario o información estrictamente confidencial.
 
 ---
 
 ### 5. Limitaciones del análisis y falsos positivos posibles
 
-*   **Naturaleza automatizada:** Este informe se basa exclusivamente en las alertas generadas por un escaneo automatizado. Las herramientas como OWASP ZAP no pueden determinar con total certeza el contexto de la lógica de negocio, por lo que la presencia de una alerta no confirma automáticamente una vulnerabilidad explotable en la práctica.
-*   **Falsos positivos comunes:** 
-    *   *Backup File Disclosure:* El escáner puede reportar falsos positivos si interpreta nombres de archivos legítimos o rutas de documentación pública como &quot;respaldos&quot;.
-    *   *Bypassing 403:* Un código de estado 200 devuelto por una ruta puede pertenecer a una página de error genérica o a contenido público que erróneamente fue marcado como prohibido en las reglas preconfiguradas del escáner.
-    *   *CORS:* Algunas políticas abiertas pueden ser intencionales si la aplicación expone recursos diseñados para ser públicos (APIs abiertas).
-*   **Ausencia de alertas no significa seguridad:** Si el informe no muestra alertas de cierto tipo (por ejemplo, Inyección SQL o XSS reflejado), **esto no demuestra que la aplicación esté libre de dichas vulnerabilidades**, ya que un escaneo automatizado básico puede no cubrir todos los flujos de la aplicación o requerir autenticación compleja y pruebas manuales avanzadas.</pre></section>
+*   **Naturaleza de las alertas automatizadas:** El informe se basa estrictamente en reglas heurísticas de OWASP ZAP. Las 31 instancias de *Backup File Disclosure* o los hallazgos de *Bypassing 403* pueden incluir respuestas genéricas del servidor (como páginas de error personalizadas con código 200) que ZAP interpreta erróneamente como exposición de archivos o evasión de controles.
+*   **Contexto de laboratorio:** OWASP Juice Shop es una aplicación diseñada intencionalmente con vulnerabilidades para propósitos educativos. Algunas alertas informativas o de riesgo medio pueden formar parte de retos específicos del laboratorio y no representar un riesgo real en entornos productivos tradicionales, o bien requerir condiciones de ejecución muy específicas.
+*   **Ausencia de alertas no implica seguridad:** El hecho de que no se reporten vulnerabilidades de riesgo alto en este reporte **no demuestra que la aplicación esté libre de ellas**, ya que los análisis automatizados dependen de las reglas activas durante el escaneo y no pueden sustituir una auditoría de código fuente o una revisión exhaustiva de la lógica de negocio.</pre></section>
 <p class="meta">Este análisis es orientativo. Valida los hallazgos manualmente antes de tomar decisiones.</p>
 </main></body></html>
