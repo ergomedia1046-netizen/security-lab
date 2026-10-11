@@ -1,13 +1,137 @@
 
-name: Test YAML
+name: Security Lab
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  actions: read
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Confirm workflow works
-        run: echo "YAML correcto"
+  scan:
+    name: Scan OWASP Juice Shop
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Check scripts
+        run: |
+          test -f scripts/generate_report.py
+          test -f scripts/compare_reports.py
+          echo "Scripts encontrados."
+
+      - name: Download previous report
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p previous-artifact
+
+          RUN_ID=$(gh run list \
+            --workflow security-lab.yml \
+            --branch main \
+            --status success \
+            --limit 10 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty')
+
+          if [ -n "$RUN_ID" ]; then
+            echo "Ejecución anterior: $RUN_ID"
+
+            gh run download "$RUN_ID" \
+              --name security-lab-reports \
+              --dir previous-artifact || true
+          else
+            echo "No hay informes anteriores."
+          fi
+
+      - name: Create lab network
+        run: docker network create labnet
+
+      - name: Start Juice Shop
+        run: |
+          docker run -d \
+            --name juice-shop \
+            --network labnet \
+            bkimminich/juice-shop
+
+      - name: Wait for application
+        run: |
+          docker run --rm \
+            --network labnet \
+            --entrypoint sh \
+            curlimages/curl:latest \
+            -c 'for i in $(seq 1 30); do
+              if curl -fsS http://juice-shop:3000/ >/dev/null; then
+                echo "Juice Shop está listo."
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "Juice Shop no respondió."
+            exit 1'
+
+      - name: Prepare reports
+        run: |
+          mkdir -p reports
+          chmod 777 reports
+
+          if [ -s previous-artifact/report.json ]; then
+            cp previous-artifact/report.json reports/baseline.json
+            echo "Informe anterior preparado."
+          else
+            echo "Se analizará sin línea base histórica."
+          fi
+
+      - name: Run ZAP passive scan
+        continue-on-error: true
+        run: |
+          zap_exit=0
+
+          docker run --rm \
+            --network labnet \
+            -v "$PWD/reports:/zap/wrk/:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t http://juice-shop:3000 \
+            -r report.html \
+            -J report.json || zap_exit=$?
+
+          echo "$zap_exit" > reports/zap-exit-code.txt
+          echo "Código de salida ZAP: $zap_exit"
+
+      - name: Generate Spanish report
+        if: always()
+        run: python3 scripts/generate_report.py
+
+      - name: Compare reports
+        if: always()
+        run: python3 scripts/compare_reports.py
+
+      - name: Show comparison
+        if: always()
+        run: |
+          if [ -f reports/comparacion.md ]; then
+            cat reports/comparacion.md
+          fi
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: security-lab-reports
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Clean up
+        if: always()
+        run: |
+          docker rm -f juice-shop || true
+          docker network rm labnet || true
