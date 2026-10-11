@@ -13,21 +13,22 @@ permissions:
 
 jobs:
   scan:
-    name: Scan OWASP Juice Shop
+    name: Security scan - Juice Shop
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 35
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Check scripts
+      - name: Check required scripts
         run: |
+          set -e
           test -f scripts/generate_report.py
           test -f scripts/compare_reports.py
           test -f scripts/generate_dashboard.py
           test -f scripts/analyze_with_ai.py
-          echo "Scripts encontrados."
+          echo "Todos los scripts necesarios existen."
 
       - name: Download previous report
         env:
@@ -44,39 +45,46 @@ jobs:
             --jq '.[0].databaseId // empty')
 
           if [ -n "$RUN_ID" ]; then
-            echo "Ejecución anterior: $RUN_ID"
+            echo "Descargando informe de la ejecución: $RUN_ID"
+
             gh run download "$RUN_ID" \
               --name security-lab-reports \
               --dir previous-artifact || true
           else
-            echo "No hay informes anteriores."
+            echo "No se encontró un informe anterior."
           fi
 
-      - name: Create lab network
+      - name: Create isolated lab network
         run: docker network create labnet
 
-      - name: Start Juice Shop
+      - name: Start OWASP Juice Shop
         run: |
           docker run -d \
             --name juice-shop \
             --network labnet \
+            --restart=no \
             bkimminich/juice-shop
 
-      - name: Wait for application
+      - name: Wait for Juice Shop
         run: |
           docker run --rm \
             --network labnet \
             --entrypoint sh \
             curlimages/curl:latest \
-            -c 'for i in $(seq 1 30); do
-              if curl -fsS http://juice-shop:3000/ >/dev/null; then
-                echo "Juice Shop está listo."
-                exit 0
-              fi
-              sleep 2
-            done
-            echo "Juice Shop no respondió."
-            exit 1'
+            -c '
+              for i in $(seq 1 45); do
+                if curl -fsS \
+                  http://juice-shop:3000/ \
+                  >/dev/null; then
+                  echo "Juice Shop está listo."
+                  exit 0
+                fi
+                sleep 2
+              done
+
+              echo "ERROR: Juice Shop no respondió."
+              exit 1
+            '
 
       - name: Prepare reports
         run: |
@@ -84,13 +92,15 @@ jobs:
           chmod 777 reports
 
           if [ -s previous-artifact/report.json ]; then
-            cp previous-artifact/report.json reports/baseline.json
-            echo "Informe anterior preparado."
+            cp previous-artifact/report.json \
+              reports/baseline.json
+
+            echo "Informe anterior preparado para comparación."
           else
-            echo "Se analizará sin línea base histórica."
+            echo "Primera ejecución o informe anterior no disponible."
           fi
 
-      - name: Run ZAP passive scan
+      - name: Passive scan with OWASP ZAP
         continue-on-error: true
         run: |
           zap_exit=0
@@ -101,21 +111,59 @@ jobs:
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t http://juice-shop:3000 \
-            -r report.html \
-            -J report.json || zap_exit=$?
+            -m 3 \
+            -r report-passive.html \
+            -J report-passive.json \
+            -I || zap_exit=$?
 
-          echo "$zap_exit" > reports/zap-exit-code.txt
-          echo "Código de salida ZAP: $zap_exit"
+          echo "$zap_exit" \
+            > reports/zap-passive-exit-code.txt
+
+          echo "Código del escaneo pasivo: $zap_exit"
+
+      - name: Active scan with OWASP ZAP
+        continue-on-error: true
+        run: |
+          zap_exit=0
+
+          docker run --rm \
+            --network labnet \
+            -v "$PWD/reports:/zap/wrk/:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-full-scan.py \
+            -t http://juice-shop:3000 \
+            -m 3 \
+            -T 5 \
+            -r report-active.html \
+            -J report.json \
+            -I || zap_exit=$?
+
+          echo "$zap_exit" \
+            > reports/zap-active-exit-code.txt
+
+          echo "Código del escaneo activo: $zap_exit"
+
+          if [ -s reports/report.json ]; then
+            echo "Informe JSON del escaneo activo creado."
+          else
+            echo "ADVERTENCIA: no se generó report.json."
+          fi
 
       - name: Generate Spanish report
         if: always()
-        run: python3 scripts/generate_report.py
+        run: |
+          if [ -s reports/report.json ]; then
+            python3 scripts/generate_report.py
+          else
+            echo "No hay informe JSON principal para generar el reporte."
+            exit 1
+          fi
 
-      - name: Compare reports
+      - name: Compare with previous scan
         if: always()
         run: python3 scripts/compare_reports.py
 
-      - name: Generate dashboard
+      - name: Generate security dashboard
         if: always()
         run: python3 scripts/generate_dashboard.py
 
@@ -127,26 +175,38 @@ jobs:
           GEMINI_MODEL: gemini-3.5-flash-lite
         run: python3 scripts/analyze_with_ai.py
 
-      - name: Save dashboard and AI report
+      - name: Publish dashboard and AI report
         if: success()
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name \
+            "github-actions[bot]"
 
-          git add docs/index.html docs/history.json
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add docs/index.html
+          git add docs/history.json
 
           if [ -f docs/analisis-ia.html ]; then
             git add docs/analisis-ia.html
           fi
 
-          if git diff --cached --quiet; then
-            echo "No hay cambios en el dashboard."
-          else
-            git commit -m "Update security dashboard and AI analysis"
-            git push
+          if [ -f docs/analisis-ia.md ]; then
+            git add docs/analisis-ia.md
           fi
 
-      - name: Upload reports
+          if git diff --cached --quiet; then
+            echo "No hay cambios nuevos para publicar."
+            exit 0
+          fi
+
+          git commit -m "Update security scan and AI report"
+
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
+
+      - name: Upload scan reports
         if: always()
         uses: actions/upload-artifact@v6
         with:
@@ -155,7 +215,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Clean up
+      - name: Clean up lab
         if: always()
         run: |
           docker rm -f juice-shop || true
