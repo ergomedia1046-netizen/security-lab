@@ -102,5 +102,101 @@
         "description": "<p>The response contents are storable by caching components such as proxy servers, but will not be retrieved directly from the cache, without validating the request upstream, in response to similar requests from other users.</p>"
       }
     ]
+  },
+  {
+    "run_id": "38102767705",
+    "run_number": "27",
+    "timestamp": "2026-10-11T01:44:45.586064+00:00",
+    "commit": "c58318c",
+    "total": 10,
+    "counts": {
+      "3": 0,
+      "2": 2,
+      "1": 5,
+      "0": 3,
+      "-1": 0
+    },
+    "alerts": [
+      {
+        "id": "",
+        "name": "Content Security Policy (CSP) Header Not Set",
+        "risk": "2",
+        "risk_name": "Medio",
+        "count": 5,
+        "description": "<p>Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross Site Scripting (XSS) and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page — covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.</p>"
+      },
+      {
+        "id": "",
+        "name": "Cross-Domain Misconfiguration",
+        "risk": "2",
+        "risk_name": "Medio",
+        "count": 5,
+        "description": "<p>Web browser data loading may be possible, due to a Cross Origin Resource Sharing (CORS) misconfiguration on the web server.</p>"
+      },
+      {
+        "id": "",
+        "name": "Cross-Origin-Embedder-Policy Header Missing or Invalid",
+        "risk": "1",
+        "risk_name": "Bajo",
+        "count": 5,
+        "description": "<p>Cross-Origin-Embedder-Policy header is a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using CORP or CORS).</p>"
+      },
+      {
+        "id": "",
+        "name": "Cross-Origin-Opener-Policy Header Missing or Invalid",
+        "risk": "1",
+        "risk_name": "Bajo",
+        "count": 5,
+        "description": "<p>Cross-Origin-Opener-Policy header is a response header that allows a site to control if others included documents share the same browsing context. Sharing the same browsing context with untrusted documents might lead to data leak.</p>"
+      },
+      {
+        "id": "",
+        "name": "Dangerous JS Functions",
+        "risk": "1",
+        "risk_name": "Bajo",
+        "count": 1,
+        "description": "<p>A dangerous JS function seems to be in use that would leave the site vulnerable.</p>"
+      },
+      {
+        "id": "",
+        "name": "Deprecated Feature Policy Header Set",
+        "risk": "1",
+        "risk_name": "Bajo",
+        "count": 5,
+        "description": "<p>The header has now been renamed to Permissions-Policy.</p>"
+      },
+      {
+        "id": "",
+        "name": "Timestamp Disclosure - Unix",
+        "risk": "1",
+        "risk_name": "Bajo",
+        "count": 5,
+        "description": "<p>A timestamp was disclosed by the application/web server. - Unix</p>"
+      },
+      {
+        "id": "",
+        "name": "Modern Web Application",
+        "risk": "0",
+        "risk_name": "Informativo",
+        "count": 5,
+        "description": "<p>The application appears to be a modern web application. If you need to explore it automatically then the Client Spider may well be more effective than the standard one.</p>"
+      },
+      {
+        "id": "",
+        "name": "Storable and Cacheable Content",
+        "risk": "0",
+        "risk_name": "Informativo",
+        "count": 2,
+        "description": "<p>The response contents are storable by caching components such as proxy servers, and may be retrieved directly from the cache, rather than from the origin server by the caching servers, in response to similar requests from other users. If the response data is sensitive, personal or user-specific, this may result in sensitive information being leaked. In some cases, this may even result in a user gaining complete control of the session of another user, depending on the configuration of the caching components in use in their environment. This is primarily an issue where \"shared\" caching servers such as \"proxy\" caches are configured on the local network. This configuration is typically found in corporate or educational environments, for instance.</p>"
+      },
+      {
+        "id": "",
+        "name": "Storable but Non-Cacheable Content",
+        "risk": "0",
+        "risk_name": "Informativo",
+        "count": 5,
+        "description": "<p>The response contents are storable by caching components such as proxy servers, but will not be retrieved directly from the cache, without validating the request upstream, in response to similar requests from other users.</p>"
+      }
+    ]
   }
 ]
