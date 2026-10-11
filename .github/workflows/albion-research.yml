@@ -1,1 +1,72 @@
 
+name: Albion Online Research
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: albion-research
+  cancel-in-progress: false
+
+jobs:
+  research:
+    name: Preparar investigación de Albion
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v5
+
+      - name: Preparar entorno
+        run: |
+          python3 --version
+          mkdir -p albion-research
+          echo "Entorno de investigación preparado en la nube."
+
+      - name: Generar informe inicial
+        run: |
+          python3 - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          report = {
+              "project": "Albion Online Research",
+              "generated_at": datetime.now(timezone.utc).isoformat(),
+              "execution_environment": "GitHub Actions",
+              "status": "initial",
+              "objective": (
+                  "Investigar información pública y documentar "
+                  "incidentes de latencia y posibles problemas "
+                  "de seguridad mediante evidencias verificables."
+              ),
+              "limitations": [
+                  "No se han realizado pruebas contra servidores del juego.",
+                  "No se ha medido la conexión del ordenador del usuario.",
+                  "No se han confirmado vulnerabilidades."
+              ],
+              "findings": [],
+              "sources": []
+          }
+
+          path = Path("albion-research/report.json")
+          path.write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8"
+          )
+
+          print(f"Informe creado: {path}")
+          PY
+
+      - name: Guardar informe como artefacto
+        uses: actions/upload-artifact@v6
+        with:
+          name: albion-research-report
+          path: albion-research/report.json
+          if-no-files-found: error
+          retention-days: 14
+
