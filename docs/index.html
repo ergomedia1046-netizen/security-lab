@@ -1,210 +1,355 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Panel de resultados del laboratorio de análisis de seguridad.">
-  <title>Security Lab | Panel de seguridad</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #0b1120;
-      --panel: #151f32;
-      --border: #293750;
-      --text: #e8eef8;
-      --muted: #a5b4cc;
-      --accent: #70a5ff;
-      --green: #54d6a0;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 24px;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: 1.6;
-    }
-
-    main {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    header {
-      margin-bottom: 28px;
-    }
-
-    h1 {
-      margin-bottom: 8px;
-      font-size: clamp(1.8rem, 5vw, 2.6rem);
-    }
-
-    h2 {
-      margin-top: 0;
-      font-size: 1.3rem;
-    }
-
-    p {
-      color: var(--muted);
-    }
-
-    .subtitle {
-      margin-top: 0;
-    }
-
-    .panel {
-      margin: 20px 0;
-      padding: 22px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-    }
-
-    .links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 18px;
-    }
-
-    .link {
-      display: inline-block;
-      padding: 11px 16px;
-      color: var(--text);
-      background: #243451;
-      border: 1px solid #3a5278;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .link:hover {
-      background: #30476b;
-    }
-
-    .primary {
-      color: #081426;
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-
-    .primary:hover {
-      background: #94bbff;
-    }
-
-    .status {
-      display: inline-block;
-      padding: 4px 10px;
-      color: var(--green);
-      background: #15382f;
-      border-radius: 20px;
-      font-size: 0.9rem;
-    }
-
-    footer {
-      margin-top: 32px;
-      padding-top: 18px;
-      border-top: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-
-    a {
-      overflow-wrap: anywhere;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Security Lab | Dashboard</title>
+<style>
+:root {
+  --bg:#0b1020; --panel:#121a2d; --panel2:#182239;
+  --text:#edf2ff; --muted:#9aa9c5; --line:#293651;
+  --high:#ff657a; --medium:#ffb454; --low:#64a9ff; --info:#a995ff;
+  --good:#48d6a0; --accent:#7c9cff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:30px 20px 24px;border-bottom:1px solid var(--line);
+  background:linear-gradient(120deg,#151f38,#0b1020)}
+main{max-width:1200px;margin:auto;padding:22px 18px 50px}
+h1{margin:0 0 6px;font-size:clamp(25px,4vw,36px)}
+h2{font-size:19px;margin:0 0 15px}
+h3{font-size:16px;margin:0 0 8px}
+p{margin:5px 0;color:var(--muted)}
+.muted{color:var(--muted);font-size:13px}
+.topline{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.pill{display:inline-block;padding:5px 10px;border-radius:20px;
+  background:#202d49;color:#dce6ff;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:20px 0}
+.card,.panel{background:var(--panel);border:1px solid var(--line);
+  border-radius:14px;padding:17px;min-width:0}
+.metric{font-size:30px;font-weight:750;margin:5px 0}
+.metric-label{color:var(--muted);font-size:13px}
+.high{color:var(--high)} .medium{color:var(--medium)}
+.low{color:var(--low)} .info{color:var(--info)} .good{color:var(--good)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.chart{width:100%;height:260px;display:block}
+.panel{margin:14px 0}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;white-space:nowrap}
+td{overflow-wrap:anywhere}
+tr:last-child td{border-bottom:0}
+.risk{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.risk-3{color:var(--high);background:#4a202e}
+.risk-2{color:var(--medium);background:#49351f}
+.risk-1{color:var(--low);background:#1e3556}
+.risk-0{color:var(--info);background:#30264e}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+button,input,select{background:var(--panel2);border:1px solid var(--line);
+  border-radius:8px;color:var(--text);padding:9px 11px}
+button{cursor:pointer}button:hover{border-color:var(--accent)}
+input{min-width:180px;flex:1}
+footer{padding-top:18px;color:var(--muted);font-size:12px;text-align:center}
+.empty{padding:20px;color:var(--muted);text-align:center}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.two{grid-template-columns:1fr}.metric{font-size:26px}header{padding-top:22px}}
+@media(max-width:380px){.grid{grid-template-columns:1fr}}
+</style>
 </head>
-
 <body>
-  <main>
-    <header>
-      <h1>Security Lab</h1>
-      <p class="subtitle">
-        Laboratorio automatizado de análisis de seguridad con OWASP ZAP,
-        informes y asistencia mediante inteligencia artificial.
-      </p>
-      <span class="status">Panel de laboratorio</span>
-    </header>
+<header>
+  <div class="topline">
+    <div>
+      <h1>Security Lab Dashboard</h1>
+      <p>Historial y tendencias de OWASP ZAP · Entorno de laboratorio</p>
+    </div>
+    <span class="pill">ANÁLISIS DEFENSIVO</span>
+  </div>
+</header>
+<main>
+  <div class="topline">
+    <div>
+      <h2>Resumen de la última ejecución</h2>
+      <p id="runMeta">Cargando datos...</p>
+    </div>
+    <span class="pill" id="historyCount">Historial: 0 ejecuciones</span>
+  </div>
 
-    <section class="panel">
-      <h2>1. Informe de seguridad</h2>
-      <p>
-        Consulta los resultados del análisis automatizado realizado sobre
-        la aplicación de laboratorio OWASP Juice Shop.
-      </p>
-      <div class="links">
-        <a class="link primary" href="reporte.html">
-          Abrir informe de seguridad
-        </a>
-        <a class="link" href="history.json">
-          Consultar historial JSON
-        </a>
+  <section class="grid">
+    <div class="card"><div class="metric-label">Alertas detectadas</div>
+      <div class="metric" id="total">—</div><div class="muted">Tipos de alerta</div></div>
+    <div class="card"><div class="metric-label">Riesgo alto</div>
+      <div class="metric high" id="high">—</div><div class="muted">Revisar primero</div></div>
+    <div class="card"><div class="metric-label">Riesgo medio</div>
+      <div class="metric medium" id="medium">—</div><div class="muted">Prioridad siguiente</div></div>
+    <div class="card"><div class="metric-label">Instancias</div>
+      <div class="metric" id="instances">—</div><div class="muted">Ubicaciones afectadas</div></div>
+  </section>
+
+  <section class="grid">
+    <div class="card"><div class="metric-label">Alertas nuevas</div>
+      <div class="metric medium" id="newAlerts">—</div><div class="muted">Frente al análisis anterior</div></div>
+    <div class="card"><div class="metric-label">Alertas resueltas</div>
+      <div class="metric good" id="resolvedAlerts">—</div><div class="muted">Ya no aparecen</div></div>
+    <div class="card"><div class="metric-label">Alertas persistentes</div>
+      <div class="metric low" id="continuingAlerts">—</div><div class="muted">Siguen presentes</div></div>
+    <div class="card"><div class="metric-label">Análisis guardados</div>
+      <div class="metric" id="runs">—</div><div class="muted">Máximo 100 registros</div></div>
+  </section>
+
+  <section class="two">
+    <div class="panel">
+      <h2>Tendencia de alertas por riesgo</h2>
+      <canvas id="trendChart" class="chart" aria-label="Tendencia de alertas por riesgo"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--high)"></i>Alto</span>
+        <span><i class="dot" style="background:var(--medium)"></i>Medio</span>
+        <span><i class="dot" style="background:var(--low)"></i>Bajo</span>
+        <span><i class="dot" style="background:var(--info)"></i>Informativo</span>
       </div>
-    </section>
-
-    <section class="panel" id="ai-analysis">
-      <h2>2. Análisis asistido por inteligencia artificial</h2>
-      <p>
-        Consulta el informe generado mediante Gemini a partir de los
-        resultados del análisis de seguridad. Puede incluir explicación
-        de alertas, nivel de riesgo y recomendaciones de mitigación.
-      </p>
-      <div class="links">
-        <a class="link primary" href="analisis-ia.html">
-          Abrir informe de análisis de IA
-        </a>
-        <a class="link" href="analisis-ia.md">
-          Ver informe en Markdown
-        </a>
+    </div>
+    <div class="panel">
+      <h2>Distribución actual</h2>
+      <canvas id="distributionChart" class="chart" aria-label="Distribución de alertas por riesgo"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--high)"></i>Alto</span>
+        <span><i class="dot" style="background:var(--medium)"></i>Medio</span>
+        <span><i class="dot" style="background:var(--low)"></i>Bajo</span>
+        <span><i class="dot" style="background:var(--info)"></i>Informativo</span>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="panel">
-      <h2>3. Historial de análisis</h2>
-      <p>
-        Utiliza el historial para revisar los datos guardados por las
-        ejecuciones del laboratorio.
-      </p>
-      <div class="links">
-        <a class="link" href="history.json">
-          Ver historial
-        </a>
-        <a class="link"
-           href="https://github.com/ergomedia1046-netizen/security-lab/actions">
-          Ver ejecuciones de GitHub Actions
-        </a>
-      </div>
-    </section>
+  <section class="panel">
+    <h2>Historial de ejecuciones</h2>
+    <p>Selecciona una ejecución para consultar sus alertas.</p>
+    <div class="actions">
+      <input id="historySearch" type="search" placeholder="Buscar por fecha, ejecución o commit">
+      <button id="downloadHistory">Exportar historial JSON</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr>
+        <th>Fecha UTC</th><th>Ejecución</th><th>Alto</th><th>Medio</th>
+        <th>Bajo</th><th>Informativo</th><th>Total</th><th>Commit</th><th>Ver</th>
+      </tr></thead><tbody id="historyTable"></tbody></table>
+    </div>
+  </section>
 
-    <section class="panel">
-      <h2>4. Código fuente del laboratorio</h2>
-      <p>
-        Revisa los scripts, la configuración del flujo de trabajo y los
-        archivos del proyecto.
-      </p>
-      <div class="links">
-        <a class="link"
-           href="https://github.com/ergomedia1046-netizen/security-lab">
-          Abrir repositorio
-        </a>
-        <a class="link"
-           href="https://github.com/ergomedia1046-netizen/security-lab/actions">
-          Ver GitHub Actions
-        </a>
-      </div>
-    </section>
+  <section class="panel">
+    <h2 id="alertsTitle">Alertas de la última ejecución</h2>
+    <div class="actions">
+      <input id="alertSearch" type="search" placeholder="Buscar alerta o descripción">
+      <select id="riskFilter" aria-label="Filtrar por riesgo">
+        <option value="">Todos los riesgos</option>
+        <option value="3">Alto</option><option value="2">Medio</option>
+        <option value="1">Bajo</option><option value="0">Informativo</option>
+      </select>
+      <button id="latestButton">Volver a la última</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr>
+        <th>Riesgo</th><th>Alerta</th><th>Instancias</th><th>Descripción</th><th>URL de ejemplo</th>
+      </tr></thead><tbody id="alertsTable"></tbody></table>
+    </div>
+  </section>
+  <footer>Generado automáticamente por GitHub Actions · OWASP ZAP · Uso en laboratorio autorizado</footer>
+<section class="panel" id="ai-analysis"><h2>Análisis asistido por IA</h2><p>Informe orientativo generado con Gemini a partir de las alertas de ZAP.</p><p><a href="analisis-ia.html">Abrir el informe de análisis de IA</a></p></section>
+</main>
+<script id="dashboard-data" type="application/json">{"history": [{"run_id": "38102657901", "run_number": "26", "timestamp": "2026-10-11T01:42:40.722697+00:00", "commit": "bdc2498", "total": 11, "counts": {"3": 0, "2": 2, "1": 5, "0": 4, "-1": 0}, "alerts": [{"id": "", "name": "Content Security Policy (CSP) Header Not Set", "risk": "2", "risk_name": "Medio", "count": 5, "description": "\u003cp\u003eContent Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross Site Scripting (XSS) and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page — covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.\u003c/p\u003e"}, {"id": "", "name": "Cross-Domain Misconfiguration", "risk": "2", "risk_name": "Medio", "count": 5, "description": "\u003cp\u003eWeb browser data loading may be possible, due to a Cross Origin Resource Sharing (CORS) misconfiguration on the web server.\u003c/p\u003e"}, {"id": "", "name": "Cross-Origin-Embedder-Policy Header Missing or Invalid", "risk": "1", "risk_name": "Bajo", "count": 5, "description": "\u003cp\u003eCross-Origin-Embedder-Policy header is a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using CORP or CORS).\u003c/p\u003e"}, {"id": "", "name": "Cross-Origin-Opener-Policy Header Missing or Invalid", "risk": "1", "risk_name": "Bajo", "count": 5, "description": "\u003cp\u003eCross-Origin-Opener-Policy header is a response header that allows a site to control if others included documents share the same browsing context. Sharing the same browsing context with untrusted documents might lead to data leak.\u003c/p\u003e"}, {"id": "", "name": "Dangerous JS Functions", "risk": "1", "risk_name": "Bajo", "count": 1, "description": "\u003cp\u003eA dangerous JS function seems to be in use that would leave the site vulnerable.\u003c/p\u003e"}, {"id": "", "name": "Deprecated Feature Policy Header Set", "risk": "1", "risk_name": "Bajo", "count": 5, "description": "\u003cp\u003eThe header has now been renamed to Permissions-Policy.\u003c/p\u003e"}, {"id": "", "name": "Timestamp Disclosure - Unix", "risk": "1", "risk_name": "Bajo", "count": 5, "description": "\u003cp\u003eA timestamp was disclosed by the application/web server. - Unix\u003c/p\u003e"}, {"id": "", "name": "Modern Web Application", "risk": "0", "risk_name": "Informativo", "count": 5, "description": "\u003cp\u003eThe application appears to be a modern web application. If you need to explore it automatically then the Client Spider may well be more effective than the standard one.\u003c/p\u003e"}, {"id": "", "name": "Non-Storable Content", "risk": "0", "risk_name": "Informativo", "count": 2, "description": "\u003cp\u003eThe response contents are not storable by caching components such as proxy servers. If the response does not contain sensitive, personal or user-specific information, it may benefit from being stored and cached, to improve performance.\u003c/p\u003e"}, {"id": "", "name": "Storable and Cacheable Content", "risk": "0", "risk_name": "Informativo", "count": 2, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, and may be retrieved directly from the cache, rather than from the origin server by the caching servers, in response to similar requests from other users. If the response data is sensitive, personal or user-specific, this may result in sensitive information being leaked. In some cases, this may even result in a user gaining complete control of the session of another user, depending on the configuration of the caching components in use in their environment. This is primarily an issue where \"shared\" caching servers such as \"proxy\" caches are configured on the local network. This configuration is typically found in corporate or educational environments, for instance.\u003c/p\u003e"}, {"id": "", "name": "Storable but Non-Cacheable Content", "risk": "0", "risk_name": "Informativo", "count": 5, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, but will not be retrieved directly from the cache, without validating the request upstream, in response to similar requests from other users.\u003c/p\u003e"}]}, {"run_id": "38102767705", "run_number": "27", "timestamp": "2026-10-11T01:44:45.586064+00:00", "commit": "c58318c", "total": 10, "counts": {"3": 0, "2": 2, "1": 5, "0": 3, "-1": 0}, "alerts": [{"id": "", "name": "Content Security Policy (CSP) Header Not Set", "risk": "2", "risk_name": "Medio", "count": 5, "description": "\u003cp\u003eContent Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross Site Scripting (XSS) and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page — covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.\u003c/p\u003e"}, {"id": "", "name": "Cross-Domain Misconfiguration", "risk": "2", "risk_name": "Medio", "count": 5, "description": "\u003cp\u003eWeb browser data loading may be possible, due to a Cross Origin Resource Sharing (CORS) misconfiguration on the web server.\u003c/p\u003e"}, {"id": "", "name": "Cross-Origin-Embedder-Policy Header Missing or Invalid", "risk": "1", "risk_name": "Bajo", "count": 5, "description": "\u003cp\u003eCross-Origin-Embedder-Policy header is a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using CORP or CORS).\u003c/p\u003e"}, {"id": "", "name": "Cross-Origin-Opener-Policy Header Missing or Invalid", "risk": "1", "risk_name": "Bajo", "count": 5, "description": "\u003cp\u003eCross-Origin-Opener-Policy header is a response header that allows a site to control if others included documents share the same browsing context. Sharing the same browsing context with untrusted documents might lead to data leak.\u003c/p\u003e"}, {"id": "", "name": "Dangerous JS Functions", "risk": "1", "risk_name": "Bajo", "count": 1, "description": "\u003cp\u003eA dangerous JS function seems to be in use that would leave the site vulnerable.\u003c/p\u003e"}, {"id": "", "name": "Deprecated Feature Policy Header Set", "risk": "1", "risk_name": "Bajo", "count": 5, "description": "\u003cp\u003eThe header has now been renamed to Permissions-Policy.\u003c/p\u003e"}, {"id": "", "name": "Timestamp Disclosure - Unix", "risk": "1", "risk_name": "Bajo", "count": 5, "description": "\u003cp\u003eA timestamp was disclosed by the application/web server. - Unix\u003c/p\u003e"}, {"id": "", "name": "Modern Web Application", "risk": "0", "risk_name": "Informativo", "count": 5, "description": "\u003cp\u003eThe application appears to be a modern web application. If you need to explore it automatically then the Client Spider may well be more effective than the standard one.\u003c/p\u003e"}, {"id": "", "name": "Storable and Cacheable Content", "risk": "0", "risk_name": "Informativo", "count": 2, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, and may be retrieved directly from the cache, rather than from the origin server by the caching servers, in response to similar requests from other users. If the response data is sensitive, personal or user-specific, this may result in sensitive information being leaked. In some cases, this may even result in a user gaining complete control of the session of another user, depending on the configuration of the caching components in use in their environment. This is primarily an issue where \"shared\" caching servers such as \"proxy\" caches are configured on the local network. This configuration is typically found in corporate or educational environments, for instance.\u003c/p\u003e"}, {"id": "", "name": "Storable but Non-Cacheable Content", "risk": "0", "risk_name": "Informativo", "count": 5, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, but will not be retrieved directly from the cache, without validating the request upstream, in response to similar requests from other users.\u003c/p\u003e"}]}, {"run_id": "38103136070", "run_number": "28", "timestamp": "2026-10-11T01:51:29+00:00", "commit": "26b588af87aa", "total_alerts": 11, "total_instances": 44, "counts": {"3": 0, "2": 2, "1": 5, "0": 4}, "alerts": [{"name": "Content Security Policy (CSP) Header Not Set", "riskcode": "2", "risk": "Medio", "confidence": "3", "instances": 5, "description": "\u003cp\u003eContent Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross Site Scripting (XSS) and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page — covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that your web server, application server, load balancer, etc. is configured to set the Content-Security-Policy header.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP\u003c/p\u003e\u003cp\u003ehttps://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/TR/CSP/\u003c/p\u003e\u003cp\u003ehttps://w3c.github.io/webappsec-csp/\u003c/p\u003e\u003cp\u003ehttps://web.dev/articles/csp\u003c/p\u003e\u003cp\u003ehttps://caniuse.com/#feat=contentsecuritypolicy\u003c/p\u003e\u003cp\u003ehttps://content-security-policy.com/\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Domain Misconfiguration", "riskcode": "2", "risk": "Medio", "confidence": "2", "instances": 5, "description": "\u003cp\u003eWeb browser data loading may be possible, due to a Cross Origin Resource Sharing (CORS) misconfiguration on the web server.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that sensitive data is not available in an unauthenticated manner (using IP address white-listing, for instance).\u003c/p\u003e\u003cp\u003eConfigure the \"Access-Control-Allow-Origin\" HTTP header to a more restrictive set of domains, or remove all CORS headers entirely, to allow the web browser to enforce the Same Origin Policy (SOP) in a more restrictive manner.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://vulncat.fortify.com/en/detail?category=HTML5\u0026subcategory=Overly%20Permissive%20CORS%20Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Origin-Embedder-Policy Header Missing or Invalid", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eCross-Origin-Embedder-Policy header is a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using CORP or CORS).\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that the application/web server sets the Cross-Origin-Embedder-Policy header appropriately, and that it sets the Cross-Origin-Embedder-Policy header to 'require-corp' for documents.\u003c/p\u003e\u003cp\u003eIf possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Embedder-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-embedder-policy).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Origin-Opener-Policy Header Missing or Invalid", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eCross-Origin-Opener-Policy header is a response header that allows a site to control if others included documents share the same browsing context. Sharing the same browsing context with untrusted documents might lead to data leak.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that the application/web server sets the Cross-Origin-Opener-Policy header appropriately, and that it sets the Cross-Origin-Opener-Policy header to 'same-origin' for documents.\u003c/p\u003e\u003cp\u003e'same-origin-allow-popups' is considered as less secured and should be avoided.\u003c/p\u003e\u003cp\u003eIf possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Opener-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-opener-policy).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Opener-Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Dangerous JS Functions", "riskcode": "1", "risk": "Bajo", "confidence": "1", "instances": 1, "description": "\u003cp\u003eA dangerous JS function seems to be in use that would leave the site vulnerable.\u003c/p\u003e", "solution": "\u003cp\u003eSee the references for security advice on the use of these functions.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://v17.angular.io/guide/security\u003c/p\u003e", "url": "http://juice-shop:3000/main.js"}, {"name": "Deprecated Feature Policy Header Set", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe header has now been renamed to Permissions-Policy.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that your web server, application server, load balancer, etc. is configured to set the Permissions-Policy header instead of the Feature-Policy header.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy\u003c/p\u003e\u003cp\u003ehttps://scotthelme.co.uk/goodbye-feature-policy-and-hello-permissions-policy/\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Timestamp Disclosure - Unix", "riskcode": "1", "risk": "Bajo", "confidence": "1", "instances": 5, "description": "\u003cp\u003eA timestamp was disclosed by the application/web server. - Unix\u003c/p\u003e", "solution": "\u003cp\u003eManually confirm that the timestamp data is not sensitive, and that the data cannot be aggregated to disclose exploitable patterns.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://cwe.mitre.org/data/definitions/200.html\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Modern Web Application", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe application appears to be a modern web application. If you need to explore it automatically then the Client Spider may well be more effective than the standard one.\u003c/p\u003e", "solution": "\u003cp\u003eThis is an informational alert and so no changes are required.\u003c/p\u003e", "reference": "", "url": "http://juice-shop:3000"}, {"name": "Non-Storable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 1, "description": "\u003cp\u003eThe response contents are not storable by caching components such as proxy servers. If the response does not contain sensitive, personal or user-specific information, it may benefit from being stored and cached, to improve performance.\u003c/p\u003e", "solution": "\u003cp\u003eThe content may be marked as storable by ensuring that the following conditions are satisfied:\u003c/p\u003e\u003cp\u003eThe request method must be understood by the cache and defined as being cacheable (\"GET\", \"HEAD\", and \"POST\" are currently defined as cacheable)\u003c/p\u003e\u003cp\u003eThe response status code must be understood by the cache (one of the 1XX, 2XX, 3XX, 4XX, or 5XX response classes are generally understood)\u003c/p\u003e\u003cp\u003eThe \"no-store\" cache directive must not appear in the request or response header fields\u003c/p\u003e\u003cp\u003eFor caching by \"shared\" caches such as \"proxy\" caches, the \"private\" response directive must not appear in the response\u003c/p\u003e\u003cp\u003eFor caching by \"shared\" caches such as \"proxy\" caches, the \"Authorization\" header field must not appear in the request, unless the response explicitly allows it (using one of the \"must-revalidate\", \"public\", or \"s-maxage\" Cache-Control response directives)\u003c/p\u003e\u003cp\u003eIn addition to the conditions above, at least one of the following conditions must also be satisfied by the response:\u003c/p\u003e\u003cp\u003eIt must contain an \"Expires\" header field\u003c/p\u003e\u003cp\u003eIt must contain a \"max-age\" response directive\u003c/p\u003e\u003cp\u003eFor \"shared\" caches such as \"proxy\" caches, it must contain a \"s-maxage\" response directive\u003c/p\u003e\u003cp\u003eIt must contain a \"Cache Control Extension\" that allows it to be cached\u003c/p\u003e\u003cp\u003eIt must have a status code that is defined as cacheable by default (200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000/ftp/coupons_2013.md.bak"}, {"name": "Storable and Cacheable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 2, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, and may be retrieved directly from the cache, rather than from the origin server by the caching servers, in response to similar requests from other users. If the response data is sensitive, personal or user-specific, this may result in sensitive information being leaked. In some cases, this may even result in a user gaining complete control of the session of another user, depending on the configuration of the caching components in use in their environment. This is primarily an issue where \"shared\" caching servers such as \"proxy\" caches are configured on the local network. This configuration is typically found in corporate or educational environments, for instance.\u003c/p\u003e", "solution": "\u003cp\u003eValidate that the response does not contain sensitive, personal or user-specific information. If it does, consider the use of the following HTTP response headers, to limit, or prevent the content being stored and retrieved from the cache by another user:\u003c/p\u003e\u003cp\u003eCache-Control: no-cache, no-store, must-revalidate, private\u003c/p\u003e\u003cp\u003ePragma: no-cache\u003c/p\u003e\u003cp\u003eExpires: 0\u003c/p\u003e\u003cp\u003eThis configuration directs both HTTP 1.0 and HTTP 1.1 compliant caching servers to not store the response, and to not retrieve the response (without validation) from the cache, in response to a similar request.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000/ftp"}, {"name": "Storable but Non-Cacheable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, but will not be retrieved directly from the cache, without validating the request upstream, in response to similar requests from other users.\u003c/p\u003e", "solution": "", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000"}]}, {"run_id": "38104081226", "run_number": "30", "timestamp": "2026-10-11T02:08:18+00:00", "commit": "3f4ba1d639ee", "total_alerts": 10, "total_instances": 43, "counts": {"3": 0, "2": 2, "1": 5, "0": 3}, "alerts": [{"name": "Content Security Policy (CSP) Header Not Set", "riskcode": "2", "risk": "Medio", "confidence": "3", "instances": 5, "description": "\u003cp\u003eContent Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross Site Scripting (XSS) and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page — covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that your web server, application server, load balancer, etc. is configured to set the Content-Security-Policy header.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP\u003c/p\u003e\u003cp\u003ehttps://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/TR/CSP/\u003c/p\u003e\u003cp\u003ehttps://w3c.github.io/webappsec-csp/\u003c/p\u003e\u003cp\u003ehttps://web.dev/articles/csp\u003c/p\u003e\u003cp\u003ehttps://caniuse.com/#feat=contentsecuritypolicy\u003c/p\u003e\u003cp\u003ehttps://content-security-policy.com/\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Domain Misconfiguration", "riskcode": "2", "risk": "Medio", "confidence": "2", "instances": 5, "description": "\u003cp\u003eWeb browser data loading may be possible, due to a Cross Origin Resource Sharing (CORS) misconfiguration on the web server.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that sensitive data is not available in an unauthenticated manner (using IP address white-listing, for instance).\u003c/p\u003e\u003cp\u003eConfigure the \"Access-Control-Allow-Origin\" HTTP header to a more restrictive set of domains, or remove all CORS headers entirely, to allow the web browser to enforce the Same Origin Policy (SOP) in a more restrictive manner.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://vulncat.fortify.com/en/detail?category=HTML5\u0026subcategory=Overly%20Permissive%20CORS%20Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Origin-Embedder-Policy Header Missing or Invalid", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eCross-Origin-Embedder-Policy header is a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using CORP or CORS).\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that the application/web server sets the Cross-Origin-Embedder-Policy header appropriately, and that it sets the Cross-Origin-Embedder-Policy header to 'require-corp' for documents.\u003c/p\u003e\u003cp\u003eIf possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Embedder-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-embedder-policy).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Origin-Opener-Policy Header Missing or Invalid", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eCross-Origin-Opener-Policy header is a response header that allows a site to control if others included documents share the same browsing context. Sharing the same browsing context with untrusted documents might lead to data leak.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that the application/web server sets the Cross-Origin-Opener-Policy header appropriately, and that it sets the Cross-Origin-Opener-Policy header to 'same-origin' for documents.\u003c/p\u003e\u003cp\u003e'same-origin-allow-popups' is considered as less secured and should be avoided.\u003c/p\u003e\u003cp\u003eIf possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Opener-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-opener-policy).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Opener-Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Dangerous JS Functions", "riskcode": "1", "risk": "Bajo", "confidence": "1", "instances": 1, "description": "\u003cp\u003eA dangerous JS function seems to be in use that would leave the site vulnerable.\u003c/p\u003e", "solution": "\u003cp\u003eSee the references for security advice on the use of these functions.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://v17.angular.io/guide/security\u003c/p\u003e", "url": "http://juice-shop:3000/main.js"}, {"name": "Deprecated Feature Policy Header Set", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe header has now been renamed to Permissions-Policy.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that your web server, application server, load balancer, etc. is configured to set the Permissions-Policy header instead of the Feature-Policy header.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy\u003c/p\u003e\u003cp\u003ehttps://scotthelme.co.uk/goodbye-feature-policy-and-hello-permissions-policy/\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Timestamp Disclosure - Unix", "riskcode": "1", "risk": "Bajo", "confidence": "1", "instances": 5, "description": "\u003cp\u003eA timestamp was disclosed by the application/web server. - Unix\u003c/p\u003e", "solution": "\u003cp\u003eManually confirm that the timestamp data is not sensitive, and that the data cannot be aggregated to disclose exploitable patterns.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://cwe.mitre.org/data/definitions/200.html\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Modern Web Application", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe application appears to be a modern web application. If you need to explore it automatically then the Client Spider may well be more effective than the standard one.\u003c/p\u003e", "solution": "\u003cp\u003eThis is an informational alert and so no changes are required.\u003c/p\u003e", "reference": "", "url": "http://juice-shop:3000"}, {"name": "Storable and Cacheable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 2, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, and may be retrieved directly from the cache, rather than from the origin server by the caching servers, in response to similar requests from other users. If the response data is sensitive, personal or user-specific, this may result in sensitive information being leaked. In some cases, this may even result in a user gaining complete control of the session of another user, depending on the configuration of the caching components in use in their environment. This is primarily an issue where \"shared\" caching servers such as \"proxy\" caches are configured on the local network. This configuration is typically found in corporate or educational environments, for instance.\u003c/p\u003e", "solution": "\u003cp\u003eValidate that the response does not contain sensitive, personal or user-specific information. If it does, consider the use of the following HTTP response headers, to limit, or prevent the content being stored and retrieved from the cache by another user:\u003c/p\u003e\u003cp\u003eCache-Control: no-cache, no-store, must-revalidate, private\u003c/p\u003e\u003cp\u003ePragma: no-cache\u003c/p\u003e\u003cp\u003eExpires: 0\u003c/p\u003e\u003cp\u003eThis configuration directs both HTTP 1.0 and HTTP 1.1 compliant caching servers to not store the response, and to not retrieve the response (without validation) from the cache, in response to a similar request.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000/ftp"}, {"name": "Storable but Non-Cacheable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, but will not be retrieved directly from the cache, without validating the request upstream, in response to similar requests from other users.\u003c/p\u003e", "solution": "", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000"}]}, {"run_id": "38104245463", "run_number": "31", "timestamp": "2026-10-11T02:11:38+00:00", "commit": "d96f79974b2b", "total_alerts": 11, "total_instances": 43, "counts": {"3": 0, "2": 2, "1": 5, "0": 4}, "alerts": [{"name": "Content Security Policy (CSP) Header Not Set", "riskcode": "2", "risk": "Medio", "confidence": "3", "instances": 4, "description": "\u003cp\u003eContent Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross Site Scripting (XSS) and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page — covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that your web server, application server, load balancer, etc. is configured to set the Content-Security-Policy header.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP\u003c/p\u003e\u003cp\u003ehttps://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/TR/CSP/\u003c/p\u003e\u003cp\u003ehttps://w3c.github.io/webappsec-csp/\u003c/p\u003e\u003cp\u003ehttps://web.dev/articles/csp\u003c/p\u003e\u003cp\u003ehttps://caniuse.com/#feat=contentsecuritypolicy\u003c/p\u003e\u003cp\u003ehttps://content-security-policy.com/\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Domain Misconfiguration", "riskcode": "2", "risk": "Medio", "confidence": "2", "instances": 5, "description": "\u003cp\u003eWeb browser data loading may be possible, due to a Cross Origin Resource Sharing (CORS) misconfiguration on the web server.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that sensitive data is not available in an unauthenticated manner (using IP address white-listing, for instance).\u003c/p\u003e\u003cp\u003eConfigure the \"Access-Control-Allow-Origin\" HTTP header to a more restrictive set of domains, or remove all CORS headers entirely, to allow the web browser to enforce the Same Origin Policy (SOP) in a more restrictive manner.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://vulncat.fortify.com/en/detail?category=HTML5\u0026subcategory=Overly%20Permissive%20CORS%20Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Origin-Embedder-Policy Header Missing or Invalid", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eCross-Origin-Embedder-Policy header is a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using CORP or CORS).\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that the application/web server sets the Cross-Origin-Embedder-Policy header appropriately, and that it sets the Cross-Origin-Embedder-Policy header to 'require-corp' for documents.\u003c/p\u003e\u003cp\u003eIf possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Embedder-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-embedder-policy).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Origin-Opener-Policy Header Missing or Invalid", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eCross-Origin-Opener-Policy header is a response header that allows a site to control if others included documents share the same browsing context. Sharing the same browsing context with untrusted documents might lead to data leak.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that the application/web server sets the Cross-Origin-Opener-Policy header appropriately, and that it sets the Cross-Origin-Opener-Policy header to 'same-origin' for documents.\u003c/p\u003e\u003cp\u003e'same-origin-allow-popups' is considered as less secured and should be avoided.\u003c/p\u003e\u003cp\u003eIf possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Opener-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-opener-policy).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Opener-Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Dangerous JS Functions", "riskcode": "1", "risk": "Bajo", "confidence": "1", "instances": 1, "description": "\u003cp\u003eA dangerous JS function seems to be in use that would leave the site vulnerable.\u003c/p\u003e", "solution": "\u003cp\u003eSee the references for security advice on the use of these functions.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://v17.angular.io/guide/security\u003c/p\u003e", "url": "http://juice-shop:3000/main.js"}, {"name": "Deprecated Feature Policy Header Set", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe header has now been renamed to Permissions-Policy.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that your web server, application server, load balancer, etc. is configured to set the Permissions-Policy header instead of the Feature-Policy header.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy\u003c/p\u003e\u003cp\u003ehttps://scotthelme.co.uk/goodbye-feature-policy-and-hello-permissions-policy/\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Timestamp Disclosure - Unix", "riskcode": "1", "risk": "Bajo", "confidence": "1", "instances": 5, "description": "\u003cp\u003eA timestamp was disclosed by the application/web server. - Unix\u003c/p\u003e", "solution": "\u003cp\u003eManually confirm that the timestamp data is not sensitive, and that the data cannot be aggregated to disclose exploitable patterns.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://cwe.mitre.org/data/definitions/200.html\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Modern Web Application", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe application appears to be a modern web application. If you need to explore it automatically then the Client Spider may well be more effective than the standard one.\u003c/p\u003e", "solution": "\u003cp\u003eThis is an informational alert and so no changes are required.\u003c/p\u003e", "reference": "", "url": "http://juice-shop:3000"}, {"name": "Non-Storable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 1, "description": "\u003cp\u003eThe response contents are not storable by caching components such as proxy servers. If the response does not contain sensitive, personal or user-specific information, it may benefit from being stored and cached, to improve performance.\u003c/p\u003e", "solution": "\u003cp\u003eThe content may be marked as storable by ensuring that the following conditions are satisfied:\u003c/p\u003e\u003cp\u003eThe request method must be understood by the cache and defined as being cacheable (\"GET\", \"HEAD\", and \"POST\" are currently defined as cacheable)\u003c/p\u003e\u003cp\u003eThe response status code must be understood by the cache (one of the 1XX, 2XX, 3XX, 4XX, or 5XX response classes are generally understood)\u003c/p\u003e\u003cp\u003eThe \"no-store\" cache directive must not appear in the request or response header fields\u003c/p\u003e\u003cp\u003eFor caching by \"shared\" caches such as \"proxy\" caches, the \"private\" response directive must not appear in the response\u003c/p\u003e\u003cp\u003eFor caching by \"shared\" caches such as \"proxy\" caches, the \"Authorization\" header field must not appear in the request, unless the response explicitly allows it (using one of the \"must-revalidate\", \"public\", or \"s-maxage\" Cache-Control response directives)\u003c/p\u003e\u003cp\u003eIn addition to the conditions above, at least one of the following conditions must also be satisfied by the response:\u003c/p\u003e\u003cp\u003eIt must contain an \"Expires\" header field\u003c/p\u003e\u003cp\u003eIt must contain a \"max-age\" response directive\u003c/p\u003e\u003cp\u003eFor \"shared\" caches such as \"proxy\" caches, it must contain a \"s-maxage\" response directive\u003c/p\u003e\u003cp\u003eIt must contain a \"Cache Control Extension\" that allows it to be cached\u003c/p\u003e\u003cp\u003eIt must have a status code that is defined as cacheable by default (200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000/ftp/encrypt.pyc"}, {"name": "Storable and Cacheable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 2, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, and may be retrieved directly from the cache, rather than from the origin server by the caching servers, in response to similar requests from other users. If the response data is sensitive, personal or user-specific, this may result in sensitive information being leaked. In some cases, this may even result in a user gaining complete control of the session of another user, depending on the configuration of the caching components in use in their environment. This is primarily an issue where \"shared\" caching servers such as \"proxy\" caches are configured on the local network. This configuration is typically found in corporate or educational environments, for instance.\u003c/p\u003e", "solution": "\u003cp\u003eValidate that the response does not contain sensitive, personal or user-specific information. If it does, consider the use of the following HTTP response headers, to limit, or prevent the content being stored and retrieved from the cache by another user:\u003c/p\u003e\u003cp\u003eCache-Control: no-cache, no-store, must-revalidate, private\u003c/p\u003e\u003cp\u003ePragma: no-cache\u003c/p\u003e\u003cp\u003eExpires: 0\u003c/p\u003e\u003cp\u003eThis configuration directs both HTTP 1.0 and HTTP 1.1 compliant caching servers to not store the response, and to not retrieve the response (without validation) from the cache, in response to a similar request.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000/ftp"}, {"name": "Storable but Non-Cacheable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, but will not be retrieved directly from the cache, without validating the request upstream, in response to similar requests from other users.\u003c/p\u003e", "solution": "", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000"}]}, {"run_id": "38104825533", "run_number": "32", "timestamp": "2026-10-11T02:21:55+00:00", "commit": "51a6ffccaaab", "total_alerts": 11, "total_instances": 44, "counts": {"3": 0, "2": 2, "1": 5, "0": 4}, "alerts": [{"name": "Content Security Policy (CSP) Header Not Set", "riskcode": "2", "risk": "Medio", "confidence": "3", "instances": 5, "description": "\u003cp\u003eContent Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross Site Scripting (XSS) and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page — covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that your web server, application server, load balancer, etc. is configured to set the Content-Security-Policy header.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP\u003c/p\u003e\u003cp\u003ehttps://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/TR/CSP/\u003c/p\u003e\u003cp\u003ehttps://w3c.github.io/webappsec-csp/\u003c/p\u003e\u003cp\u003ehttps://web.dev/articles/csp\u003c/p\u003e\u003cp\u003ehttps://caniuse.com/#feat=contentsecuritypolicy\u003c/p\u003e\u003cp\u003ehttps://content-security-policy.com/\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Domain Misconfiguration", "riskcode": "2", "risk": "Medio", "confidence": "2", "instances": 5, "description": "\u003cp\u003eWeb browser data loading may be possible, due to a Cross Origin Resource Sharing (CORS) misconfiguration on the web server.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that sensitive data is not available in an unauthenticated manner (using IP address white-listing, for instance).\u003c/p\u003e\u003cp\u003eConfigure the \"Access-Control-Allow-Origin\" HTTP header to a more restrictive set of domains, or remove all CORS headers entirely, to allow the web browser to enforce the Same Origin Policy (SOP) in a more restrictive manner.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://vulncat.fortify.com/en/detail?category=HTML5\u0026subcategory=Overly%20Permissive%20CORS%20Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Origin-Embedder-Policy Header Missing or Invalid", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eCross-Origin-Embedder-Policy header is a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using CORP or CORS).\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that the application/web server sets the Cross-Origin-Embedder-Policy header appropriately, and that it sets the Cross-Origin-Embedder-Policy header to 'require-corp' for documents.\u003c/p\u003e\u003cp\u003eIf possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Embedder-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-embedder-policy).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Origin-Opener-Policy Header Missing or Invalid", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eCross-Origin-Opener-Policy header is a response header that allows a site to control if others included documents share the same browsing context. Sharing the same browsing context with untrusted documents might lead to data leak.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that the application/web server sets the Cross-Origin-Opener-Policy header appropriately, and that it sets the Cross-Origin-Opener-Policy header to 'same-origin' for documents.\u003c/p\u003e\u003cp\u003e'same-origin-allow-popups' is considered as less secured and should be avoided.\u003c/p\u003e\u003cp\u003eIf possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Opener-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-opener-policy).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Opener-Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Dangerous JS Functions", "riskcode": "1", "risk": "Bajo", "confidence": "1", "instances": 1, "description": "\u003cp\u003eA dangerous JS function seems to be in use that would leave the site vulnerable.\u003c/p\u003e", "solution": "\u003cp\u003eSee the references for security advice on the use of these functions.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://v17.angular.io/guide/security\u003c/p\u003e", "url": "http://juice-shop:3000/main.js"}, {"name": "Deprecated Feature Policy Header Set", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe header has now been renamed to Permissions-Policy.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that your web server, application server, load balancer, etc. is configured to set the Permissions-Policy header instead of the Feature-Policy header.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy\u003c/p\u003e\u003cp\u003ehttps://scotthelme.co.uk/goodbye-feature-policy-and-hello-permissions-policy/\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Timestamp Disclosure - Unix", "riskcode": "1", "risk": "Bajo", "confidence": "1", "instances": 5, "description": "\u003cp\u003eA timestamp was disclosed by the application/web server. - Unix\u003c/p\u003e", "solution": "\u003cp\u003eManually confirm that the timestamp data is not sensitive, and that the data cannot be aggregated to disclose exploitable patterns.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://cwe.mitre.org/data/definitions/200.html\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Modern Web Application", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe application appears to be a modern web application. If you need to explore it automatically then the Client Spider may well be more effective than the standard one.\u003c/p\u003e", "solution": "\u003cp\u003eThis is an informational alert and so no changes are required.\u003c/p\u003e", "reference": "", "url": "http://juice-shop:3000"}, {"name": "Non-Storable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 1, "description": "\u003cp\u003eThe response contents are not storable by caching components such as proxy servers. If the response does not contain sensitive, personal or user-specific information, it may benefit from being stored and cached, to improve performance.\u003c/p\u003e", "solution": "\u003cp\u003eThe content may be marked as storable by ensuring that the following conditions are satisfied:\u003c/p\u003e\u003cp\u003eThe request method must be understood by the cache and defined as being cacheable (\"GET\", \"HEAD\", and \"POST\" are currently defined as cacheable)\u003c/p\u003e\u003cp\u003eThe response status code must be understood by the cache (one of the 1XX, 2XX, 3XX, 4XX, or 5XX response classes are generally understood)\u003c/p\u003e\u003cp\u003eThe \"no-store\" cache directive must not appear in the request or response header fields\u003c/p\u003e\u003cp\u003eFor caching by \"shared\" caches such as \"proxy\" caches, the \"private\" response directive must not appear in the response\u003c/p\u003e\u003cp\u003eFor caching by \"shared\" caches such as \"proxy\" caches, the \"Authorization\" header field must not appear in the request, unless the response explicitly allows it (using one of the \"must-revalidate\", \"public\", or \"s-maxage\" Cache-Control response directives)\u003c/p\u003e\u003cp\u003eIn addition to the conditions above, at least one of the following conditions must also be satisfied by the response:\u003c/p\u003e\u003cp\u003eIt must contain an \"Expires\" header field\u003c/p\u003e\u003cp\u003eIt must contain a \"max-age\" response directive\u003c/p\u003e\u003cp\u003eFor \"shared\" caches such as \"proxy\" caches, it must contain a \"s-maxage\" response directive\u003c/p\u003e\u003cp\u003eIt must contain a \"Cache Control Extension\" that allows it to be cached\u003c/p\u003e\u003cp\u003eIt must have a status code that is defined as cacheable by default (200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000/ftp/coupons_2013.md.bak"}, {"name": "Storable and Cacheable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 2, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, and may be retrieved directly from the cache, rather than from the origin server by the caching servers, in response to similar requests from other users. If the response data is sensitive, personal or user-specific, this may result in sensitive information being leaked. In some cases, this may even result in a user gaining complete control of the session of another user, depending on the configuration of the caching components in use in their environment. This is primarily an issue where \"shared\" caching servers such as \"proxy\" caches are configured on the local network. This configuration is typically found in corporate or educational environments, for instance.\u003c/p\u003e", "solution": "\u003cp\u003eValidate that the response does not contain sensitive, personal or user-specific information. If it does, consider the use of the following HTTP response headers, to limit, or prevent the content being stored and retrieved from the cache by another user:\u003c/p\u003e\u003cp\u003eCache-Control: no-cache, no-store, must-revalidate, private\u003c/p\u003e\u003cp\u003ePragma: no-cache\u003c/p\u003e\u003cp\u003eExpires: 0\u003c/p\u003e\u003cp\u003eThis configuration directs both HTTP 1.0 and HTTP 1.1 compliant caching servers to not store the response, and to not retrieve the response (without validation) from the cache, in response to a similar request.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000/ftp"}, {"name": "Storable but Non-Cacheable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, but will not be retrieved directly from the cache, without validating the request upstream, in response to similar requests from other users.\u003c/p\u003e", "solution": "", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000"}]}], "current": {"run_id": "38104825533", "run_number": "32", "timestamp": "2026-10-11T02:21:55+00:00", "commit": "51a6ffccaaab", "total_alerts": 11, "total_instances": 44, "counts": {"3": 0, "2": 2, "1": 5, "0": 4}, "alerts": [{"name": "Content Security Policy (CSP) Header Not Set", "riskcode": "2", "risk": "Medio", "confidence": "3", "instances": 5, "description": "\u003cp\u003eContent Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross Site Scripting (XSS) and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page — covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that your web server, application server, load balancer, etc. is configured to set the Content-Security-Policy header.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP\u003c/p\u003e\u003cp\u003ehttps://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/TR/CSP/\u003c/p\u003e\u003cp\u003ehttps://w3c.github.io/webappsec-csp/\u003c/p\u003e\u003cp\u003ehttps://web.dev/articles/csp\u003c/p\u003e\u003cp\u003ehttps://caniuse.com/#feat=contentsecuritypolicy\u003c/p\u003e\u003cp\u003ehttps://content-security-policy.com/\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Domain Misconfiguration", "riskcode": "2", "risk": "Medio", "confidence": "2", "instances": 5, "description": "\u003cp\u003eWeb browser data loading may be possible, due to a Cross Origin Resource Sharing (CORS) misconfiguration on the web server.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that sensitive data is not available in an unauthenticated manner (using IP address white-listing, for instance).\u003c/p\u003e\u003cp\u003eConfigure the \"Access-Control-Allow-Origin\" HTTP header to a more restrictive set of domains, or remove all CORS headers entirely, to allow the web browser to enforce the Same Origin Policy (SOP) in a more restrictive manner.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://vulncat.fortify.com/en/detail?category=HTML5\u0026subcategory=Overly%20Permissive%20CORS%20Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Origin-Embedder-Policy Header Missing or Invalid", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eCross-Origin-Embedder-Policy header is a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using CORP or CORS).\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that the application/web server sets the Cross-Origin-Embedder-Policy header appropriately, and that it sets the Cross-Origin-Embedder-Policy header to 'require-corp' for documents.\u003c/p\u003e\u003cp\u003eIf possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Embedder-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-embedder-policy).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Cross-Origin-Opener-Policy Header Missing or Invalid", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eCross-Origin-Opener-Policy header is a response header that allows a site to control if others included documents share the same browsing context. Sharing the same browsing context with untrusted documents might lead to data leak.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that the application/web server sets the Cross-Origin-Opener-Policy header appropriately, and that it sets the Cross-Origin-Opener-Policy header to 'same-origin' for documents.\u003c/p\u003e\u003cp\u003e'same-origin-allow-popups' is considered as less secured and should be avoided.\u003c/p\u003e\u003cp\u003eIf possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Opener-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-opener-policy).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Opener-Policy\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Dangerous JS Functions", "riskcode": "1", "risk": "Bajo", "confidence": "1", "instances": 1, "description": "\u003cp\u003eA dangerous JS function seems to be in use that would leave the site vulnerable.\u003c/p\u003e", "solution": "\u003cp\u003eSee the references for security advice on the use of these functions.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://v17.angular.io/guide/security\u003c/p\u003e", "url": "http://juice-shop:3000/main.js"}, {"name": "Deprecated Feature Policy Header Set", "riskcode": "1", "risk": "Bajo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe header has now been renamed to Permissions-Policy.\u003c/p\u003e", "solution": "\u003cp\u003eEnsure that your web server, application server, load balancer, etc. is configured to set the Permissions-Policy header instead of the Feature-Policy header.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy\u003c/p\u003e\u003cp\u003ehttps://scotthelme.co.uk/goodbye-feature-policy-and-hello-permissions-policy/\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Timestamp Disclosure - Unix", "riskcode": "1", "risk": "Bajo", "confidence": "1", "instances": 5, "description": "\u003cp\u003eA timestamp was disclosed by the application/web server. - Unix\u003c/p\u003e", "solution": "\u003cp\u003eManually confirm that the timestamp data is not sensitive, and that the data cannot be aggregated to disclose exploitable patterns.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://cwe.mitre.org/data/definitions/200.html\u003c/p\u003e", "url": "http://juice-shop:3000"}, {"name": "Modern Web Application", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe application appears to be a modern web application. If you need to explore it automatically then the Client Spider may well be more effective than the standard one.\u003c/p\u003e", "solution": "\u003cp\u003eThis is an informational alert and so no changes are required.\u003c/p\u003e", "reference": "", "url": "http://juice-shop:3000"}, {"name": "Non-Storable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 1, "description": "\u003cp\u003eThe response contents are not storable by caching components such as proxy servers. If the response does not contain sensitive, personal or user-specific information, it may benefit from being stored and cached, to improve performance.\u003c/p\u003e", "solution": "\u003cp\u003eThe content may be marked as storable by ensuring that the following conditions are satisfied:\u003c/p\u003e\u003cp\u003eThe request method must be understood by the cache and defined as being cacheable (\"GET\", \"HEAD\", and \"POST\" are currently defined as cacheable)\u003c/p\u003e\u003cp\u003eThe response status code must be understood by the cache (one of the 1XX, 2XX, 3XX, 4XX, or 5XX response classes are generally understood)\u003c/p\u003e\u003cp\u003eThe \"no-store\" cache directive must not appear in the request or response header fields\u003c/p\u003e\u003cp\u003eFor caching by \"shared\" caches such as \"proxy\" caches, the \"private\" response directive must not appear in the response\u003c/p\u003e\u003cp\u003eFor caching by \"shared\" caches such as \"proxy\" caches, the \"Authorization\" header field must not appear in the request, unless the response explicitly allows it (using one of the \"must-revalidate\", \"public\", or \"s-maxage\" Cache-Control response directives)\u003c/p\u003e\u003cp\u003eIn addition to the conditions above, at least one of the following conditions must also be satisfied by the response:\u003c/p\u003e\u003cp\u003eIt must contain an \"Expires\" header field\u003c/p\u003e\u003cp\u003eIt must contain a \"max-age\" response directive\u003c/p\u003e\u003cp\u003eFor \"shared\" caches such as \"proxy\" caches, it must contain a \"s-maxage\" response directive\u003c/p\u003e\u003cp\u003eIt must contain a \"Cache Control Extension\" that allows it to be cached\u003c/p\u003e\u003cp\u003eIt must have a status code that is defined as cacheable by default (200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501).\u003c/p\u003e", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000/ftp/coupons_2013.md.bak"}, {"name": "Storable and Cacheable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 2, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, and may be retrieved directly from the cache, rather than from the origin server by the caching servers, in response to similar requests from other users. If the response data is sensitive, personal or user-specific, this may result in sensitive information being leaked. In some cases, this may even result in a user gaining complete control of the session of another user, depending on the configuration of the caching components in use in their environment. This is primarily an issue where \"shared\" caching servers such as \"proxy\" caches are configured on the local network. This configuration is typically found in corporate or educational environments, for instance.\u003c/p\u003e", "solution": "\u003cp\u003eValidate that the response does not contain sensitive, personal or user-specific information. If it does, consider the use of the following HTTP response headers, to limit, or prevent the content being stored and retrieved from the cache by another user:\u003c/p\u003e\u003cp\u003eCache-Control: no-cache, no-store, must-revalidate, private\u003c/p\u003e\u003cp\u003ePragma: no-cache\u003c/p\u003e\u003cp\u003eExpires: 0\u003c/p\u003e\u003cp\u003eThis configuration directs both HTTP 1.0 and HTTP 1.1 compliant caching servers to not store the response, and to not retrieve the response (without validation) from the cache, in response to a similar request.\u003c/p\u003e", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000/ftp"}, {"name": "Storable but Non-Cacheable Content", "riskcode": "0", "risk": "Informativo", "confidence": "2", "instances": 5, "description": "\u003cp\u003eThe response contents are storable by caching components such as proxy servers, but will not be retrieved directly from the cache, without validating the request upstream, in response to similar requests from other users.\u003c/p\u003e", "solution": "", "reference": "\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7234\u003c/p\u003e\u003cp\u003ehttps://datatracker.ietf.org/doc/html/rfc7231\u003c/p\u003e\u003cp\u003ehttps://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html\u003c/p\u003e", "url": "http://juice-shop:3000"}]}, "comparison": {"new": 0, "resolved": 0, "continuing": 11}}</script>
+<script>
+(function(){
+"use strict";
+const DATA = JSON.parse(document.getElementById("dashboard-data").textContent);
+const history = DATA.history || [];
+const latest = DATA.current || {};
+let selected = latest;
+const palette = { "3":"#ff657a", "2":"#ffb454", "1":"#64a9ff", "0":"#a995ff" };
+const labels = { "3":"Alto", "2":"Medio", "1":"Bajo", "0":"Informativo" };
+const $ = id => document.getElementById(id);
+const fmtDate = value => {
+  if(!value) return "—";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleString("es-BO", {timeZone:"UTC"}) + " UTC";
+};
+const esc = value => String(value == null ? "" : value).replace(/[&<>"']/g, c => ({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
+function setText(id, value){ $(id).textContent = value == null ? "—" : value; }
 
-    <footer>
-      <p>
-        Proyecto de laboratorio educativo. Realiza pruebas únicamente
-        sobre aplicaciones y sistemas para los que tengas autorización.
-      </p>
-    </footer>
-  </main>
+function renderSummary(snapshot, comparison){
+  const counts = snapshot.counts || {};
+  setText("total", snapshot.total_alerts || 0);
+  setText("high", counts["3"] || 0);
+  setText("medium", counts["2"] || 0);
+  setText("instances", snapshot.total_instances || 0);
+  setText("newAlerts", comparison.new || 0);
+  setText("resolvedAlerts", comparison.resolved || 0);
+  setText("continuingAlerts", comparison.continuing || 0);
+  setText("runs", history.length);
+  setText("historyCount", "Historial: " + history.length + " ejecuciones");
+  setText("runMeta", "Fecha: " + fmtDate(snapshot.timestamp) +
+    " · Ejecución: #" + (snapshot.run_number || "—") +
+    " · Commit: " + (snapshot.commit || "—"));
+}
+
+function setupCanvas(canvas){
+  const rect = canvas.getBoundingClientRect();
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, Math.round(rect.width * ratio));
+  canvas.height = Math.max(1, Math.round(rect.height * ratio));
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+  return {ctx,w:rect.width,h:rect.height};
+}
+
+function drawTrend(){
+  const canvas = $("trendChart");
+  const {ctx,w,h} = setupCanvas(canvas);
+  ctx.clearRect(0,0,w,h);
+  const rows = history.slice(-20);
+  if(!rows.length){ctx.fillStyle="#9aa9c5";ctx.fillText("Todavía no hay historial",16,30);return;}
+  const pad = {l:32,r:10,t:12,b:38};
+  const pw = Math.max(1,w-pad.l-pad.r), ph = Math.max(1,h-pad.t-pad.b);
+  const max = Math.max(1,...rows.map(r => RISK_ORDER.reduce((sum,k)=>sum+Number((r.counts||{})[k]||0),0)));
+  ctx.font="10px system-ui";ctx.strokeStyle="#293651";ctx.fillStyle="#9aa9c5";
+  for(let i=0;i<=4;i++){
+    const y=pad.t+ph*i/4;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
+    ctx.fillText(String(Math.round(max*(4-i)/4)),2,y+3);
+  }
+  RISK_ORDER.forEach(risk=>{
+    ctx.strokeStyle=palette[risk];ctx.lineWidth=2;ctx.beginPath();
+    rows.forEach((row,i)=>{
+      const x=pad.l+(rows.length===1?pw/2:pw*i/(rows.length-1));
+      const val=Number((row.counts||{})[risk]||0);
+      const y=pad.t+ph-(val/max)*ph;
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+  });
+  const ticks = Math.min(rows.length,5);
+  for(let i=0;i<ticks;i++){
+    const index=ticks===1?rows.length-1:Math.round(i*(rows.length-1)/(ticks-1));
+    const x=pad.l+(rows.length===1?pw/2:pw*index/(rows.length-1));
+    const row=rows[index];
+    const label=row.run_number ? "#"+row.run_number : (row.timestamp||"").slice(5,10);
+    ctx.fillStyle="#9aa9c5";ctx.textAlign="center";ctx.fillText(label,x,h-17);
+  }
+  ctx.textAlign="start";
+}
+
+function drawDistribution(){
+  const canvas = $("distributionChart");
+  const {ctx,w,h} = setupCanvas(canvas);
+  ctx.clearRect(0,0,w,h);
+  const counts = latest.counts || {};
+  const values = RISK_ORDER.map(k=>Number(counts[k]||0));
+  const total=values.reduce((a,b)=>a+b,0);
+  if(total===0){ctx.fillStyle="#9aa9c5";ctx.font="13px system-ui";ctx.fillText("No hay alertas para mostrar",12,28);return;}
+  const cx=w/2, cy=h/2, radius=Math.min(w,h)*0.30, inner=radius*0.62;
+  let angle=-Math.PI/2;
+  values.forEach((value,i)=>{
+    if(!value)return;
+    const end=angle+(value/total)*Math.PI*2;
+    ctx.beginPath();ctx.arc(cx,cy,radius,angle,end);ctx.arc(cx,cy,inner,end,angle,true);
+    ctx.closePath();ctx.fillStyle=palette[RISK_ORDER[i]];ctx.fill();angle=end;
+  });
+  ctx.textAlign="center";ctx.fillStyle="#edf2ff";ctx.font="bold 25px system-ui";
+  ctx.fillText(String(total),cx,cy+2);
+  ctx.font="11px system-ui";ctx.fillStyle="#9aa9c5";ctx.fillText("alertas",cx,cy+19);
+  ctx.textAlign="start";
+}
+
+function renderHistory(filter=""){
+  const body=$("historyTable");
+  const term=filter.toLowerCase();
+  const rows=history.slice().reverse().filter(row =>
+    [row.timestamp,row.run_number,row.commit].join(" ").toLowerCase().includes(term));
+  if(!rows.length){body.innerHTML='<tr><td colspan="9" class="empty">No hay ejecuciones que coincidan.</td></tr>';return;}
+  body.innerHTML=rows.map(row=>{
+    const c=row.counts||{};
+    const index=history.indexOf(row);
+    return `<tr>
+      <td>${esc(fmtDate(row.timestamp))}</td><td>#${esc(row.run_number||"—")}</td>
+      <td class="high">${Number(c["3"]||0)}</td>
+      <td class="medium">${Number(c["2"]||0)}</td>
+      <td class="low">${Number(c["1"]||0)}</td>
+      <td>${Number(c["0"]||0)}</td>
+      <td><strong>${Number(row.total_alerts||0)}</strong></td>
+      <td>${esc(row.commit||"—")}</td>
+      <td><button data-history-index="${index}">Ver</button></td>
+    </tr>`;
+  }).join("");
+  body.querySelectorAll("button[data-history-index]").forEach(button=>{
+    button.addEventListener("click",()=>{
+      const row=history[Number(button.dataset.historyIndex)];
+      if(row) selectSnapshot(row);
+    });
+  });
+}
+
+function renderAlerts(){
+  const body=$("alertsTable");
+  const term=$("alertSearch").value.toLowerCase();
+  const risk=$("riskFilter").value;
+  const alerts=(selected.alerts||[]).filter(a=>{
+    const matchesRisk=!risk || String(a.riskcode)===risk;
+    const matchesText=[a.name,a.description,a.url,a.solution].join(" ").toLowerCase().includes(term);
+    return matchesRisk&&matchesText;
+  });
+  if(!alerts.length){body.innerHTML='<tr><td colspan="5" class="empty">No hay alertas que coincidan.</td></tr>';return;}
+  body.innerHTML=alerts.map(a=>{
+    const code=String(a.riskcode==null?"0":a.riskcode);
+    const desc=String(a.description||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
+    return `<tr>
+      <td><span class="risk risk-${esc(code)}">${esc(a.risk||labels[code]||"Desconocido")}</span></td>
+      <td><strong>${esc(a.name)}</strong></td>
+      <td>${Number(a.instances||0)}</td>
+      <td>${esc(desc.slice(0,450))}${desc.length>450?"…":""}</td>
+      <td>${a.url?`<a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">${esc(a.url)}</a>`:"—"}</td>
+    </tr>`;
+  }).join("");
+  setText("alertsTitle","Alertas de la ejecución "+(selected.run_number?"#"+selected.run_number:"seleccionada"));
+}
+
+function selectSnapshot(snapshot){
+  selected=snapshot;
+  const index=history.indexOf(snapshot);
+  const previous=index>0?history[index-1]:null;
+  const currentKeys=new Set((snapshot.alerts||[]).map(a=>a.name+"||"+a.riskcode));
+  const previousKeys=new Set((previous?.alerts||[]).map(a=>a.name+"||"+a.riskcode));
+  const comparison=previous?{
+    new:[...currentKeys].filter(k=>!previousKeys.has(k)).length,
+    resolved:[...previousKeys].filter(k=>!currentKeys.has(k)).length,
+    continuing:[...currentKeys].filter(k=>previousKeys.has(k)).length
+  }:{new:0,resolved:0,continuing:0};
+  renderSummary(snapshot,comparison);
+  renderAlerts();
+}
+
+$("historySearch").addEventListener("input",e=>renderHistory(e.target.value));
+$("alertSearch").addEventListener("input",renderAlerts);
+$("riskFilter").addEventListener("change",renderAlerts);
+$("latestButton").addEventListener("click",()=>selectSnapshot(latest));
+$("downloadHistory").addEventListener("click",()=>{
+  const blob=new Blob([JSON.stringify(history,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download="security-lab-history.json";
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+});
+window.addEventListener("resize",()=>{drawTrend();drawDistribution();});
+renderSummary(latest,DATA.comparison||{new:0,resolved:0,continuing:0});
+renderHistory();
+renderAlerts();
+drawTrend();
+drawDistribution();
+})();
+</script>
 </body>
 </html>
