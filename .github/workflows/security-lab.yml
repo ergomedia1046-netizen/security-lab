@@ -1,3 +1,4 @@
+```yaml
 name: Security Lab
 
 on:
@@ -14,75 +15,53 @@ jobs:
   scan:
     name: Scan OWASP Juice Shop
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
-      # 1. Descargar el repositorio
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      # 2. Comprobar que existen los scripts
-      - name: Diagnose repository files
+      - name: Check scripts
         run: |
-          echo "Directorio de trabajo:"
-          pwd
-
-          echo "Commit ejecutado:"
-          git rev-parse --short HEAD
-
-          echo "Archivos de scripts:"
-          git ls-tree -r --name-only HEAD scripts/
-
           test -f scripts/generate_report.py
           test -f scripts/compare_reports.py
+          echo "Scripts encontrados correctamente."
 
-      # 3. Buscar el último informe exitoso
-      - name: Find and download previous report
+      - name: Download previous report
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p previous-artifact
 
-          PREVIOUS_RUN_ID=$(gh run list \
+          RUN_ID=$(gh run list \
             --workflow security-lab.yml \
             --branch main \
             --status success \
-            --limit 10 \
+            --limit 5 \
             --json databaseId \
             --jq '.[0].databaseId // empty')
 
-          if [ -z "$PREVIOUS_RUN_ID" ]; then
-            echo "No hay ejecuciones exitosas anteriores."
-            exit 0
-          fi
+          if [ -n "$RUN_ID" ]; then
+            echo "Ejecución anterior: $RUN_ID"
 
-          echo "Ejecución anterior encontrada: $PREVIOUS_RUN_ID"
-
-          if gh run download "$PREVIOUS_RUN_ID" \
-            --name security-lab-reports \
-            --dir previous-artifact; then
-            echo "Informe anterior descargado."
-            ls -lah previous-artifact/
+            gh run download "$RUN_ID" \
+              --name security-lab-reports \
+              --dir previous-artifact || true
           else
-            echo "No se pudo descargar el informe anterior."
-            echo "El análisis continuará sin una línea base."
+            echo "No existe una ejecución anterior."
           fi
 
-      # 4. Crear una red aislada para el laboratorio
       - name: Create isolated lab network
-        run: |
-          docker network create labnet
+        run: docker network create labnet
 
-      # 5. Iniciar OWASP Juice Shop
-      - name: Start training application
+      - name: Start Juice Shop
         run: |
           docker run -d \
             --name juice-shop \
             --network labnet \
             bkimminich/juice-shop
 
-      # 6. Esperar hasta que la aplicación responda
-      - name: Wait for application
+      - name: Wait for Juice Shop
         run: |
           docker run --rm \
             --network labnet \
@@ -98,26 +77,19 @@ jobs:
             echo "Juice Shop no respondió a tiempo."
             exit 1'
 
-      # 7. Preparar el directorio de informes
-      - name: Prepare report directory
+      - name: Prepare reports
         run: |
           mkdir -p reports
           chmod 777 reports
 
-      # 8. Preparar la línea base del análisis anterior
-      - name: Prepare previous baseline
-        run: |
           if [ -s previous-artifact/report.json ]; then
             cp previous-artifact/report.json reports/baseline.json
-            echo "Línea base anterior preparada."
+            echo "Informe anterior preparado."
           else
-            echo "No hay informe anterior disponible."
-            echo "Esta ejecución podría ser la primera comparación."
+            echo "Se ejecutará sin línea base histórica."
           fi
 
-      # 9. Ejecutar el análisis pasivo con OWASP ZAP
-      - name: Run passive security scan
-        id: zap
+      - name: Run ZAP passive scan
         continue-on-error: true
         run: |
           zap_exit=0
@@ -132,59 +104,28 @@ jobs:
             -J report.json || zap_exit=$?
 
           echo "$zap_exit" > reports/zap-exit-code.txt
+          echo "Código de salida ZAP: $zap_exit"
 
-          echo "Código de salida de ZAP: $zap_exit"
-
-          if [ -s reports/report.json ]; then
-            echo "Informe JSON generado."
-          else
-            echo "ADVERTENCIA: no se generó report.json."
-          fi
-
-          if [ -s reports/report.html ]; then
-            echo "Informe HTML generado."
-          else
-            echo "ADVERTENCIA: no se generó report.html."
-          fi
-
-      # 10. Generar el informe técnico en español
-      - name: Generate Spanish technical report
+      - name: Generate Spanish report
         if: always()
         run: |
-          python3 --version
+          python3 scripts/generate_report.py
 
-          if [ -f scripts/generate_report.py ]; then
-            python3 scripts/generate_report.py
-          else
-            echo "No se encontró scripts/generate_report.py"
-            exit 1
-          fi
-
-      # 11. Comparar el análisis actual con el anterior
-      - name: Compare security results
+      - name: Compare reports
         if: always()
         run: |
-          if [ -f scripts/compare_reports.py ]; then
-            python3 scripts/compare_reports.py
-          else
-            echo "No se encontró scripts/compare_reports.py"
-            exit 1
-          fi
+          python3 scripts/compare_reports.py
 
-      # 12. Mostrar los archivos generados en los registros
-      - name: Show generated reports
+      - name: Display comparison
         if: always()
         run: |
-          echo "Archivos disponibles:"
-          find reports -maxdepth 2 -type f -print
-
           if [ -f reports/comparacion.md ]; then
-            echo "===== COMPARACIÓN ====="
             cat reports/comparacion.md
+          else
+            echo "No se generó comparacion.md"
           fi
 
-      # 13. Guardar todos los informes como artefacto
-      - name: Save reports
+      - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v6
         with:
@@ -193,8 +134,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-      # 14. Limpiar los contenedores y la red
-      - name: Clean up lab
+      - name: Clean up
         if: always()
         run: |
           docker rm -f juice-shop || true
