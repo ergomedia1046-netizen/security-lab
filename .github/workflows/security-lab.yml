@@ -1,4 +1,4 @@
-```yaml
+
 name: Test YAML
 
 on:
@@ -10,4 +10,4 @@ jobs:
     steps:
       - name: Confirm workflow works
         run: echo "YAML correcto"
-```
+
