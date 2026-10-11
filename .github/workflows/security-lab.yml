@@ -26,6 +26,7 @@ jobs:
           test -f scripts/generate_report.py
           test -f scripts/compare_reports.py
           test -f scripts/generate_dashboard.py
+          test -f scripts/analyze_with_ai.py
           echo "Scripts encontrados."
 
       - name: Download previous report
@@ -116,10 +117,17 @@ jobs:
 
       - name: Generate dashboard
         if: always()
-        run: |
-          python3 scripts/generate_dashboard.py
+        run: python3 scripts/generate_dashboard.py
 
-      - name: Save dashboard history
+      - name: Analyze findings with Gemini
+        if: always() && hashFiles('reports/report.json') != ''
+        continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-3.5-flash-lite
+        run: python3 scripts/analyze_with_ai.py
+
+      - name: Save dashboard and AI report
         if: success()
         run: |
           git config user.name "github-actions[bot]"
@@ -127,10 +135,14 @@ jobs:
 
           git add docs/index.html docs/history.json
 
+          if [ -f docs/analisis-ia.html ]; then
+            git add docs/analisis-ia.html
+          fi
+
           if git diff --cached --quiet; then
             echo "No hay cambios en el dashboard."
           else
-            git commit -m "Update security dashboard"
+            git commit -m "Update security dashboard and AI analysis"
             git push
           fi
 
