@@ -13,12 +13,12 @@ permissions:
 jobs:
   scan:
     name: Scan OWASP Juice Shop
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Diagnose repository files
         run: |
@@ -102,7 +102,7 @@ jobs:
 
       - name: Save reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: security-lab-reports
           path: reports/
